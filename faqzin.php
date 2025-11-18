@@ -3,9 +3,9 @@
  * Plugin Name: faqzin
  * Description: Lightweight FAQ plugin with a simple shortcode.
  * Version: 0.1.0
- * Author: Your Org Name
- * Author URI: https://yourorg.com
- * Plugin URI: https://github.com/your-org/faqzin
+ * Author: Vizuh
+ * Author URI: https://vizuh.com
+ * Plugin URI: https://github.com/vizuh/faqzin
  * License: GPL-2.0-or-later
  * Text Domain: faqzin
  */
