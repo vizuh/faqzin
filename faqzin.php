@@ -2,7 +2,7 @@
 /**
  * Plugin Name: faqzin
  * Description: Lightweight FAQ plugin with a simple shortcode.
- * Version: 0.1.1
+ * Version: 0.2.0
  * Author: Vizuh
  * Author URI: https://vizuh.com
  * Plugin URI: https://github.com/vizuh/faqzin
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('FAQZIN_VER', '0.1.1');
+define('FAQZIN_VER', '0.2.0');
 define('FAQZIN_FILE', __FILE__);
 define('FAQZIN_URL', plugin_dir_url(__FILE__));
 define('FAQZIN_PATH', plugin_dir_path(__FILE__));
