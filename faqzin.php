@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: faqzin
+ * Plugin Name: FAQzin
  * Description: Lightweight FAQ plugin with a simple shortcode.
  * Version: 0.2.0
  * Author: Vizuh
