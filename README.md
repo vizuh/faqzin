@@ -1,22 +1,73 @@
-# faqzin
-Lightweight FAQ plugin with a built-in FAQ custom post type, semantic accordion shortcode, and optional custom CSS.
+# ![FAQzin Logo](assets/images/logo.png) FAQzin
 
-## Install
-Upload `faqzin` to `wp-content/plugins/` and activate.
+**Professional FAQ Manager for WordPress**
 
-## Usage
-- Add FAQs under **FAQs → Add New**. Optionally assign **FAQ Categories** and order items with the **Order** field.
-- Display them with `[faq_accordion]`, e.g.:
-  - `[faq_accordion]` – output all FAQs.
-  - `[faq_accordion category="billing"]` – limit to a category slug.
-  - `[faq_accordion class="my-faq"]` – add extra wrapper classes.
-- The legacy `[faqzin]...[/faqzin]` shortcode still wraps custom markup if you prefer manual content.
+[![License](https://img.shields.io/badge/License-GPLv2%20or%20later-blue.svg)](http://www.gnu.org/licenses/gpl-2.0.html)
+[![Version](https://img.shields.io/badge/Version-2.0.0-green.svg)](https://vizuh.com)
 
-## Dev
-- Registers a `faqzin_faq` custom post type and `faqzin_category` taxonomy.
-- Enqueues `assets/faqzin.css` and `assets/faqzin.js` only when the shortcode is rendered, and attaches custom CSS set in **Settings → FAQzin**.
-- Outputs semantic `<details>/<summary>` markup plus JSON-LD FAQPage schema for better SEO.
-- PHP 7.4+ / 8.x compatible.
+---
 
-## License
-GPL-2.0-or-later
+## 🌐 Documentation / Documentação
+
+- [🇺🇸 English Documentation](#english-documentation)
+- [🇧🇷 Documentação em Português](#documentação-em-português)
+
+---
+
+<a name="english-documentation"></a>
+## 🇺🇸 English Documentation
+
+**FAQzin** is a lightweight, professional FAQ plugin designed for modern WordPress sites. It features native HTML5 accordions, automatic SEO schema markup, and a premium design out of the box.
+
+### Features
+- **HTML5 Native:** Built with `<details>` and `<summary>` for accessibility and performance.
+- **SEO Ready:** Automatically injects `FAQPage` and `QAPage` JSON-LD schema.
+- **Responsive:** Looks great on mobile, tablet, and desktop.
+- **Customizable:** Add your own CSS directly from the settings page.
+
+### Installation
+1. Download the plugin zip file.
+2. Go to **Plugins > Add New > Upload Plugin** in WordPress.
+3. Upload and activate.
+
+### Usage
+Use the shortcode `[faqzin]` to display all FAQs.
+
+**Parameters:**
+- `category`: Filter by category slug. Example: `[faqzin category="sales"]`
+- `limit`: Limit the number of items. Example: `[faqzin limit="5"]`
+- `schema`: Enable/Disable schema (default: yes). Example: `[faqzin schema="no"]`
+
+---
+
+<a name="documentação-em-português"></a>
+## 🇧🇷 Documentação em Português
+
+**FAQzin** é um plugin de FAQ profissional e leve, projetado para sites WordPress modernos. Ele utiliza accordions nativos HTML5, marcação de esquema SEO automática e um design premium pronto para uso.
+
+### Funcionalidades
+- **Nativo HTML5:** Construído com `<details>` e `<summary>` para acessibilidade e performance.
+- **Pronto para SEO:** Injeta automaticamente schema JSON-LD `FAQPage` e `QAPage`.
+- **Responsivo:** Visual perfeito em celulares, tablets e desktops.
+- **Personalizável:** Adicione seu próprio CSS diretamente na página de configurações.
+
+### Instalação
+1. Baixe o arquivo zip do plugin.
+2. Vá em **Plugins > Adicionar Novo > Enviar Plugin** no WordPress.
+3. Envie e ative.
+
+### Como Usar
+Use o shortcode `[faqzin]` para exibir todos os FAQs.
+
+**Parâmetros:**
+- `category`: Filtrar por slug da categoria. Exemplo: `[faqzin category="vendas"]`
+- `limit`: Limitar o número de itens. Exemplo: `[faqzin limit="5"]`
+- `schema`: Ativar/Desativar schema (padrão: yes). Exemplo: `[faqzin schema="no"]`
+
+---
+
+### Support / Suporte
+
+For support, please visit [vizuh.com](https://vizuh.com).
+
+Developed by **Vizuh**.

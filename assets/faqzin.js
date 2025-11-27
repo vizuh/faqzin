@@ -1,37 +1,47 @@
 (function ($) {
     'use strict';
 
-    function setupFaqzin($container) {
-        $container.attr('role', 'list');
-        $container.find('details.faqzin-item').each(function () {
+    function initFaqAccordion() {
+        $('.faqzin-item').each(function () {
             var $item = $(this);
-            var $question = $item.find('.faqzin-question').first();
-            var $answer = $item.find('.faqzin-answer').first();
 
-            if (!$question.length || !$answer.length) {
+            // Skip if already initialized
+            if ($item.data('faqzin-initialized')) {
                 return;
             }
 
+            var $summary = $item.find('summary');
+            var $answer = $item.find('.faqzin-answer');
+            var $icon = $item.find('.faqzin-icon');
+
+            // Sync initial state
             function syncState() {
                 var isOpen = $item.prop('open');
-                $item.toggleClass('is-open', isOpen);
-                $question.toggleClass('is-open', isOpen);
-                $answer.toggleClass('is-open', isOpen);
-                $question.attr('aria-expanded', isOpen ? 'true' : 'false');
+                $summary.attr('aria-expanded', isOpen ? 'true' : 'false');
                 $answer.attr('aria-hidden', isOpen ? 'false' : 'true');
+                $icon.text(isOpen ? '−' : '+');
             }
 
             syncState();
 
+            // Listen to native toggle event from <details>
             $item.on('toggle', function () {
                 syncState();
             });
+
+            // Mark as initialized
+            $item.data('faqzin-initialized', true);
         });
     }
 
-    $(function () {
-        $('.faqzin').each(function () {
-            setupFaqzin($(this));
-        });
+    // Initialize on ready
+    $(document).ready(function () {
+        initFaqAccordion();
     });
+
+    // Reinitialize on load for cached content
+    $(window).on('load', function () {
+        initFaqAccordion();
+    });
+
 })(jQuery);
