@@ -1,5 +1,5 @@
 === FAQzin ===
-Contributors: vizuh
+Contributors: pauloreducino, hfdutra, atroci
 Tags: faq, accordion, schema, elementor, divi
 Requires at least: 5.8
 Tested up to: 6.4
