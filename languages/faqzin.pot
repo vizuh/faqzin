@@ -1,0 +1,143 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: FAQzin 2.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-27 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco Translate 2.6.4\n"
+"X-Domain: faqzin\n"
+
+#. Plugin Name of the plugin
+msgid "FAQzin"
+msgstr ""
+
+#. Description of the plugin
+msgid "Professional FAQ Manager with Schema, HTML5 Accordion, Divi & Elementor Ready"
+msgstr ""
+
+#. Author of the plugin
+msgid "Vizuh"
+msgstr ""
+
+#: includes/class-cpt.php:100 includes/class-cpt.php:111
+msgid "FAQs"
+msgstr ""
+
+#: includes/class-cpt.php:101 includes/class-cpt.php:112
+msgid "FAQ"
+msgstr ""
+
+#: includes/class-cpt.php:102
+msgid "Add New"
+msgstr ""
+
+#: includes/class-cpt.php:103
+msgid "Add New FAQ"
+msgstr ""
+
+#: includes/class-cpt.php:104
+msgid "Edit FAQ"
+msgstr ""
+
+#: includes/class-cpt.php:105
+msgid "New FAQ"
+msgstr ""
+
+#: includes/class-cpt.php:106
+msgid "View FAQ"
+msgstr ""
+
+#: includes/class-cpt.php:107
+msgid "Search FAQs"
+msgstr ""
+
+#: includes/class-cpt.php:108
+msgid "No FAQs found"
+msgstr ""
+
+#: includes/class-cpt.php:109
+msgid "No FAQs found in Trash"
+msgstr ""
+
+#: includes/class-cpt.php:110
+msgid "All FAQs"
+msgstr ""
+
+#: includes/class-cpt.php:140
+msgid "FAQ Categories"
+msgstr ""
+
+#: includes/class-cpt.php:141
+msgid "FAQ Category"
+msgstr ""
+
+#: includes/class-cpt.php:142
+msgid "Search FAQ Categories"
+msgstr ""
+
+#: includes/class-cpt.php:143
+msgid "Popular FAQ Categories"
+msgstr ""
+
+#: includes/class-cpt.php:144
+msgid "All FAQ Categories"
+msgstr ""
+
+#: includes/class-cpt.php:145
+msgid "Edit FAQ Category"
+msgstr ""
+
+#: includes/class-cpt.php:146
+msgid "Update FAQ Category"
+msgstr ""
+
+#: includes/class-cpt.php:147
+msgid "Add New FAQ Category"
+msgstr ""
+
+#: includes/class-cpt.php:148
+msgid "New FAQ Category Name"
+msgstr ""
+
+#: includes/class-cpt.php:149
+msgid "Separate categories with commas"
+msgstr ""
+
+#: includes/class-cpt.php:150
+msgid "Add or remove categories"
+msgstr ""
+
+#: includes/class-cpt.php:151
+msgid "Choose from most used categories"
+msgstr ""
+
+#: includes/class-cpt.php:152
+msgid "Categories"
+msgstr ""
+
+#: includes/class-settings.php:23 includes/class-settings.php:24 includes/class-settings.php:75
+msgid "FAQzin Settings"
+msgstr ""
+
+#: includes/class-settings.php:23 includes/class-settings.php:24
+msgid "Settings"
+msgstr ""
+
+#: includes/class-settings.php:78
+msgid "Quick Guide"
+msgstr ""
+
+#: includes/class-settings.php:96
+msgid "Custom CSS"
+msgstr ""
+
+#: includes/class-settings.php:105
+msgid "Add custom CSS to style your FAQs. This will be loaded inline."
+msgstr ""

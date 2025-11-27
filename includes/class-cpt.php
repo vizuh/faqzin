@@ -1,0 +1,220 @@
+<?php
+/**
+ * Custom Post Type and Taxonomy Registration
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class FAQzin_CPT {
+    
+    public function __construct() {
+        add_action('init', array($this, 'register_post_type'));
+        add_action('init', array($this, 'register_taxonomy'));
+        add_action('wp_head', array($this, 'add_single_faq_schema'));
+        
+        // Remove author/date from single FAQ pages
+        add_filter('the_author', array($this, 'remove_author'));
+        add_filter('the_date', array($this, 'remove_date'));
+        add_filter('get_the_date', array($this, 'remove_date'));
+        add_filter('the_time', array($this, 'remove_date'));
+        add_filter('get_the_time', array($this, 'remove_date'));
+        add_filter('the_modified_date', array($this, 'remove_date'));
+        add_filter('get_the_modified_date', array($this, 'remove_date'));
+        add_action('wp_head', array($this, 'add_single_faq_css'), 999);
+    }
+    
+    /**
+     * Remove author from single FAQ pages
+     */
+    public function remove_author($author) {
+        if (is_singular('faq')) {
+            return '';
+        }
+        return $author;
+    }
+    
+    /**
+     * Remove date from single FAQ pages
+     */
+    public function remove_date($date) {
+        if (is_singular('faq')) {
+            return '';
+        }
+        return $date;
+    }
+    
+    /**
+     * Add aggressive CSS to hide author/date on single FAQ pages
+     */
+    public function add_single_faq_css() {
+        if (!is_singular('faq')) {
+            return;
+        }
+        ?>
+        <style type="text/css">
+        /* Hide author and date on single FAQ pages - AGGRESSIVE */
+        .single-faq .entry-meta,
+        .single-faq .post-meta,
+        .single-faq .entry-footer,
+        .single-faq .posted-on,
+        .single-faq .byline,
+        .single-faq .author,
+        .single-faq .vcard,
+        .single-faq .updated,
+        .single-faq time,
+        .single-faq .entry-date,
+        .single-faq .published,
+        body.single-faq .entry-meta,
+        body.single-faq .byline,
+        body.single-faq time,
+        body.single-faq .posted-on,
+        body.single-faq .author,
+        article.faq .entry-meta,
+        article.faq .byline,
+        article.faq time,
+        article.post-type-faq .entry-meta,
+        article.post-type-faq .byline,
+        article.post-type-faq time {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            height: 0 !important;
+            width: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            position: absolute !important;
+            left: -9999px !important;
+        }
+        </style>
+        <?php
+    }
+    
+    /**
+     * Register FAQ Custom Post Type
+     */
+    public function register_post_type() {
+        $labels = array(
+            'name'                  => __('FAQs', 'faqzin'),
+            'singular_name'         => __('FAQ', 'faqzin'),
+            'add_new'               => __('Add New', 'faqzin'),
+            'add_new_item'          => __('Add New FAQ', 'faqzin'),
+            'edit_item'             => __('Edit FAQ', 'faqzin'),
+            'new_item'              => __('New FAQ', 'faqzin'),
+            'view_item'             => __('View FAQ', 'faqzin'),
+            'search_items'          => __('Search FAQs', 'faqzin'),
+            'not_found'             => __('No FAQs found', 'faqzin'),
+            'not_found_in_trash'    => __('No FAQs found in Trash', 'faqzin'),
+            'all_items'             => __('All FAQs', 'faqzin'),
+            'menu_name'             => __('FAQs', 'faqzin'),
+            'name_admin_bar'        => __('FAQ', 'faqzin'),
+        );
+        
+        $args = array(
+            'labels'                => $labels,
+            'public'                => true,
+            'publicly_queryable'    => true,
+            'show_ui'               => true,
+            'show_in_menu'          => true,
+            'query_var'             => true,
+            'rewrite'               => array('slug' => 'faq'),
+            'capability_type'       => 'post',
+            'has_archive'           => true,
+            'hierarchical'          => false,
+            'menu_position'         => 25,
+            'menu_icon'             => 'dashicons-editor-help',
+            'supports'              => array('title', 'editor', 'revisions', 'page-attributes'),
+            'show_in_rest'          => true, // Gutenberg/Elementor support
+        );
+        
+        register_post_type('faq', $args);
+    }
+    
+    /**
+     * Register FAQ Category Taxonomy
+     */
+    public function register_taxonomy() {
+        $labels = array(
+            'name'                       => __('FAQ Categories', 'faqzin'),
+            'singular_name'              => __('FAQ Category', 'faqzin'),
+            'search_items'               => __('Search FAQ Categories', 'faqzin'),
+            'popular_items'              => __('Popular FAQ Categories', 'faqzin'),
+            'all_items'                  => __('All FAQ Categories', 'faqzin'),
+            'edit_item'                  => __('Edit FAQ Category', 'faqzin'),
+            'update_item'                => __('Update FAQ Category', 'faqzin'),
+            'add_new_item'               => __('Add New FAQ Category', 'faqzin'),
+            'new_item_name'              => __('New FAQ Category Name', 'faqzin'),
+            'separate_items_with_commas' => __('Separate categories with commas', 'faqzin'),
+            'add_or_remove_items'        => __('Add or remove categories', 'faqzin'),
+            'choose_from_most_used'      => __('Choose from most used categories', 'faqzin'),
+            'menu_name'                  => __('Categories', 'faqzin'),
+        );
+        
+        $args = array(
+            'labels'                => $labels,
+            'hierarchical'          => true,
+            'public'                => true,
+            'show_ui'               => true,
+            'show_admin_column'     => true,
+            'show_in_nav_menus'     => true,
+            'show_tagcloud'         => true,
+            'show_in_rest'          => true, // REST API support
+            'rewrite'               => array('slug' => 'faq-category'),
+        );
+        
+        register_taxonomy('faq_category', array('faq'), $args);
+    }
+    
+    /**
+     * Add schema.org markup to single FAQ pages
+     */
+    public function add_single_faq_schema() {
+        // Only on single FAQ pages
+        if (!is_singular('faq')) {
+            return;
+        }
+        
+        global $post;
+        
+        if (!$post) {
+            return;
+        }
+        
+        // Get FAQ data
+        $question = get_the_title($post->ID);
+        $answer_raw = get_post_field('post_content', $post->ID);
+        $answer_text = wp_strip_all_tags($answer_raw);
+        
+        // Build QAPage schema
+        $schema = array(
+            '@context'   => 'https://schema.org',
+            '@type'      => array('WebPage', 'QAPage'),
+            'mainEntity' => array(
+                '@type'          => 'Question',
+                'name'           => $question,
+                'text'           => $question,
+                'answerCount'    => 1,
+                'datePublished'  => get_the_date('c', $post->ID),
+                'dateModified'   => get_the_modified_date('c', $post->ID),
+                'acceptedAnswer' => array(
+                    '@type'        => 'Answer',
+                    'text'         => $answer_text,
+                    'dateCreated'  => get_the_date('c', $post->ID),
+                    'upvoteCount'  => 0,
+                ),
+            ),
+        );
+        
+        // Output schema
+        echo "\n<!-- FAQzin - Single FAQ Schema -->\n";
+        echo '<script type="application/ld+json">';
+        echo wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        echo '</script>';
+        echo "\n<!-- /FAQzin Schema -->\n";
+    }
+}
+
+// Initialize
+new FAQzin_CPT();
