@@ -24,18 +24,15 @@ class FAQzin_CPT {
         add_filter('get_the_modified_date', array($this, 'remove_date'));
         add_action('wp_head', array($this, 'add_single_faq_css'), 999);
         
-        // Add Order column and Quick Edit
+        // Add Order column
         add_filter('manage_faq_posts_columns', array($this, 'add_order_column'));
-        add_action('manage_faq_posts_custom_column', array($this, 'show_order_column_editable'), 10, 2);
+        add_action('manage_faq_posts_custom_column', array($this, 'show_order_column'), 10, 2);
         add_filter('manage_edit-faq_sortable_columns', array($this, 'make_order_column_sortable'));
         add_action('pre_get_posts', array($this, 'order_by_menu_order'));
         
-        // Add Quick Edit field
-        add_action('quick_edit_custom_box', array($this, 'add_quick_edit_order'), 10, 2);
-        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
-        
-        // AJAX save order
-        add_action('wp_ajax_faqzin_save_order', array($this, 'ajax_save_order'));
+        // Drag & Drop functionality in All FAQs
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_drag_drop_scripts'));
+        add_action('wp_ajax_faqzin_update_order', array($this, 'ajax_update_order'));
         
         // Add Re-Order submenu page
         add_action('admin_menu', array($this, 'add_reorder_submenu'));
@@ -70,7 +67,7 @@ class FAQzin_CPT {
                     ));
                     $order++;
                 }
-                echo '<div class="notice notice-success"><p>' . __('Order saved successfully!', 'faqzin') . '</p></div>';
+                echo '<div class="notice notice-success is-dismissible"><p><strong>' . __('Order saved successfully!', 'faqzin') . '</strong></p></div>';
             }
         }
         
@@ -81,31 +78,57 @@ class FAQzin_CPT {
             'orderby' => 'menu_order',
             'order' => 'ASC',
         ));
+        
+        if (empty($faqs)) {
+            ?>
+            <div class="wrap">
+                <h1><?php _e('Re-Order FAQs', 'faqzin'); ?></h1>
+                <div class="notice notice-warning">
+                    <p><?php _e('No FAQs found. Please create some FAQs first.', 'faqzin'); ?></p>
+                </div>
+            </div>
+            <?php
+            return;
+        }
         ?>
         <div class="wrap">
             <h1><?php _e('Re-Order FAQs', 'faqzin'); ?></h1>
-            <p><?php _e('Drag and drop FAQs to reorder them. Click "Save Order" when done.', 'faqzin'); ?></p>
+            <p style="font-size: 14px; color: #666;">
+                <strong><?php _e('Drag and drop FAQs to reorder them. Click "Save Order" when done.', 'faqzin'); ?></strong>
+            </p>
             
             <form method="post" action="">
                 <?php wp_nonce_field('faqzin_save_order', 'faqzin_order_nonce'); ?>
                 
-                <ul id="faqzin-sortable" style="max-width: 800px;">
-                    <?php foreach ($faqs as $faq) : ?>
-                        <li style="padding: 15px; margin: 5px 0; background: #fff; border: 1px solid #ccc; cursor: move; list-style: none;">
+                <ul id="faqzin-sortable" style="max-width: 900px; padding: 0; margin: 20px 0;">
+                    <?php foreach ($faqs as $index => $faq) : ?>
+                        <li style="padding: 20px; margin: 8px 0; background: #fff; border: 1px solid #ddd; border-radius: 4px; cursor: move; list-style: none; display: flex; align-items: center; transition: all 0.3s;">
                             <input type="hidden" name="faq_order[]" value="<?php echo esc_attr($faq->ID); ?>">
-                            <span style="display: inline-block; width: 40px; font-weight: bold; color: #666;">
-                                <?php echo esc_html($faq->menu_order); ?>
+                            <span style="display: inline-block; min-width: 50px; font-weight: bold; color: #2271b1; font-size: 18px;" class="order-number">
+                                <?php echo esc_html($index); ?>
                             </span>
-                            <span class="dashicons dashicons-menu" style="margin-right: 10px; color: #666;"></span>
-                            <strong><?php echo esc_html($faq->post_title); ?></strong>
+                            <span class="dashicons dashicons-menu" style="margin: 0 15px; color: #999; font-size: 24px;"></span>
+                            <strong style="font-size: 15px; flex-grow: 1;"><?php echo esc_html($faq->post_title); ?></strong>
+                            <?php 
+                            $categories = get_the_terms($faq->ID, 'faq_category');
+                            if ($categories && !is_wp_error($categories)) {
+                                echo '<span style="background: #f0f0f1; padding: 4px 10px; border-radius: 3px; font-size: 12px; color: #666;">';
+                                echo esc_html($categories[0]->name);
+                                echo '</span>';
+                            }
+                            ?>
                         </li>
                     <?php endforeach; ?>
                 </ul>
                 
-                <p style="margin-top: 20px;">
-                    <button type="submit" class="button button-primary button-large">
+                <p style="margin-top: 30px;">
+                    <button type="submit" class="button button-primary button-large" style="padding: 10px 30px;">
+                        <span class="dashicons dashicons-yes" style="margin-top: 3px;"></span>
                         <?php _e('Save Order', 'faqzin'); ?>
                     </button>
+                    <a href="<?php echo admin_url('edit.php?post_type=faq'); ?>" class="button button-secondary button-large" style="margin-left: 10px; padding: 10px 30px;">
+                        <?php _e('Back to All FAQs', 'faqzin'); ?>
+                    </a>
                 </p>
             </form>
         </div>
@@ -113,84 +136,182 @@ class FAQzin_CPT {
         <script>
         jQuery(document).ready(function($) {
             $('#faqzin-sortable').sortable({
-                placeholder: 'ui-state-highlight',
+                placeholder: 'faqzin-placeholder',
+                handle: 'li',
+                cursor: 'move',
+                opacity: 0.8,
+                tolerance: 'pointer',
+                start: function(e, ui) {
+                    ui.placeholder.height(ui.item.height());
+                },
                 update: function(event, ui) {
                     // Update order numbers display
                     $('#faqzin-sortable li').each(function(index) {
-                        $(this).find('span:first').text(index);
+                        $(this).find('.order-number').text(index);
                     });
                 }
             });
+            
+            // Hover effect
+            $('#faqzin-sortable li').hover(
+                function() {
+                    $(this).css({
+                        'background': '#f6f7f7',
+                        'border-color': '#2271b1',
+                        'box-shadow': '0 2px 8px rgba(0,0,0,0.1)'
+                    });
+                },
+                function() {
+                    $(this).css({
+                        'background': '#fff',
+                        'border-color': '#ddd',
+                        'box-shadow': 'none'
+                    });
+                }
+            );
         });
         </script>
         
         <style>
-        #faqzin-sortable {
-            padding: 0;
+        .faqzin-placeholder {
+            background: #fff3cd !important;
+            border: 2px dashed #ffc107 !important;
+            height: 60px !important;
+            visibility: visible !important;
+            border-radius: 4px;
         }
-        #faqzin-sortable li:hover {
-            background: #f0f0f1 !important;
-        }
-        .ui-state-highlight {
-            height: 60px;
-            background: #fffbcc;
-            border: 2px dashed #999;
+        #faqzin-sortable li.ui-sortable-helper {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
+            border-color: #2271b1 !important;
         }
         </style>
         <?php
     }
     
     /**
-     * Enqueue admin scripts for inline editing
+     * Enqueue drag & drop scripts for All FAQs page
      */
-    public function enqueue_admin_scripts($hook) {
+    public function enqueue_drag_drop_scripts($hook) {
         global $post_type;
         
-        if ($post_type === 'faq') {
-            // jQuery UI for sortable
+        if ($hook === 'edit.php' && $post_type === 'faq') {
             wp_enqueue_script('jquery-ui-sortable');
             
-            // Inline edit script
-            if ($hook === 'edit.php') {
-                wp_enqueue_script('faqzin-inline-edit', plugin_dir_url(dirname(__FILE__)) . 'assets/inline-edit.js', array('jquery'), '1.0', true);
-                wp_localize_script('faqzin-inline-edit', 'faqzinAjax', array(
-                    'ajax_url' => admin_url('admin-ajax.php'),
-                    'nonce' => wp_create_nonce('faqzin_inline_edit')
-                ));
-            }
+            wp_add_inline_script('jquery-ui-sortable', "
+                jQuery(document).ready(function($) {
+                    var fixHelper = function(e, ui) {
+                        ui.children().each(function() {
+                            $(this).width($(this).width());
+                        });
+                        return ui;
+                    };
+                    
+                    $('#the-list').sortable({
+                        helper: fixHelper,
+                        handle: '.column-menu_order',
+                        cursor: 'move',
+                        axis: 'y',
+                        opacity: 0.65,
+                        placeholder: 'faqzin-placeholder',
+                        start: function(e, ui) {
+                            ui.placeholder.height(ui.helper.height());
+                            ui.placeholder.css('visibility', 'visible');
+                        },
+                        update: function(event, ui) {
+                            var order = $('#the-list').sortable('serialize');
+                            
+                            $.ajax({
+                                url: ajaxurl,
+                                type: 'POST',
+                                data: {
+                                    action: 'faqzin_update_order',
+                                    order: order,
+                                    nonce: '" . wp_create_nonce('faqzin_sort_nonce') . "'
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        // Update order numbers display
+                                        $('#the-list tr').each(function(index) {
+                                            $(this).find('.column-menu_order').html('<strong>' + index + '</strong>');
+                                        });
+                                        
+                                        // Show success message
+                                        if ($('.faqzin-notice').length === 0) {
+                                            $('#wpbody-content .wrap h1').after('<div class=\"notice notice-success is-dismissible faqzin-notice\"><p><strong>Order saved successfully!</strong></p></div>');
+                                            setTimeout(function() {
+                                                $('.faqzin-notice').fadeOut();
+                                            }, 3000);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Add drag cursor on hover
+                    $('#the-list .column-menu_order').css('cursor', 'move');
+                });
+            ");
+            
+            wp_add_inline_style('wp-admin', "
+                .faqzin-placeholder {
+                    background: #fff3cd !important;
+                    border: 2px dashed #ffc107 !important;
+                }
+                .column-menu_order {
+                    cursor: move !important;
+                    background: #f0f0f1;
+                    text-align: center;
+                    font-weight: bold;
+                }
+                .column-menu_order:hover {
+                    background: #e0e0e1;
+                }
+                .ui-sortable-helper {
+                    background: #fff;
+                    opacity: 0.8;
+                }
+            ");
         }
     }
     
     /**
-     * AJAX handler to save order
+     * AJAX handler to update order
      */
-    public function ajax_save_order() {
-        check_ajax_referer('faqzin_inline_edit', 'nonce');
+    public function ajax_update_order() {
+        check_ajax_referer('faqzin_sort_nonce', 'nonce');
         
         if (!current_user_can('edit_posts')) {
             wp_send_json_error('Permission denied');
         }
         
-        $post_id = intval($_POST['post_id']);
-        $order = intval($_POST['order']);
+        parse_str($_POST['order'], $data);
         
-        wp_update_post(array(
-            'ID' => $post_id,
-            'menu_order' => $order
-        ));
+        if (!is_array($data)) {
+            wp_send_json_error('Invalid data');
+        }
         
-        wp_send_json_success(array('order' => $order));
+        $order = 0;
+        foreach ($data['post'] as $post_id) {
+            wp_update_post(array(
+                'ID' => intval($post_id),
+                'menu_order' => $order
+            ));
+            $order++;
+        }
+        
+        wp_send_json_success(array('message' => 'Order updated'));
     }
     
     /**
-     * Add Order column to FAQ list
+     * Add Order column
      */
     public function add_order_column($columns) {
         $new_columns = array();
         
         foreach ($columns as $key => $value) {
             if ($key === 'title') {
-                $new_columns['menu_order'] = __('Order', 'faqzin');
+                $new_columns['menu_order'] = __('☰ Order', 'faqzin');
             }
             $new_columns[$key] = $value;
         }
@@ -199,48 +320,13 @@ class FAQzin_CPT {
     }
     
     /**
-     * Display Order value in column with inline editing
+     * Display Order value
      */
-    public function show_order_column_editable($column, $post_id) {
+    public function show_order_column($column, $post_id) {
         if ($column === 'menu_order') {
             $order = get_post_field('menu_order', $post_id);
-            ?>
-            <div class="faqzin-order-wrapper" style="display: flex; align-items: center; gap: 5px;">
-                <input 
-                    type="number" 
-                    class="faqzin-order-input" 
-                    data-post-id="<?php echo esc_attr($post_id); ?>"
-                    value="<?php echo esc_attr($order); ?>" 
-                    style="width: 60px; text-align: center;"
-                    min="0"
-                >
-                <span class="faqzin-order-status" style="color: #999; display: none;">
-                    <span class="dashicons dashicons-yes" style="color: green;"></span>
-                </span>
-            </div>
-            <?php
+            echo '<strong>' . esc_html($order) . '</strong>';
         }
-    }
-    
-    /**
-     * Add Quick Edit field for Order
-     */
-    public function add_quick_edit_order($column_name, $post_type) {
-        if ($column_name !== 'menu_order' || $post_type !== 'faq') {
-            return;
-        }
-        ?>
-        <fieldset class="inline-edit-col-right">
-            <div class="inline-edit-col">
-                <label>
-                    <span class="title"><?php _e('Order', 'faqzin'); ?></span>
-                    <span class="input-text-wrap">
-                        <input type="number" name="menu_order" class="ptitle" value="" min="0">
-                    </span>
-                </label>
-            </div>
-        </fieldset>
-        <?php
     }
     
     /**
@@ -260,7 +346,6 @@ class FAQzin_CPT {
         }
         
         if ($query->get('post_type') === 'faq') {
-            // If no orderby is set, order by menu_order
             if (!$query->get('orderby')) {
                 $query->set('orderby', 'menu_order');
                 $query->set('order', 'ASC');
@@ -369,7 +454,7 @@ class FAQzin_CPT {
             'menu_position'         => 25,
             'menu_icon'             => 'dashicons-editor-help',
             'supports'              => array('title', 'editor', 'revisions', 'page-attributes'),
-            'show_in_rest'          => true, // Gutenberg/Elementor support
+            'show_in_rest'          => true,
         );
         
         register_post_type('faq', $args);
@@ -403,7 +488,7 @@ class FAQzin_CPT {
             'show_admin_column'     => true,
             'show_in_nav_menus'     => true,
             'show_tagcloud'         => true,
-            'show_in_rest'          => true, // REST API support
+            'show_in_rest'          => true,
             'rewrite'               => array('slug' => 'faq-category'),
         );
         
@@ -414,7 +499,6 @@ class FAQzin_CPT {
      * Add schema.org markup to single FAQ pages
      */
     public function add_single_faq_schema() {
-        // Only on single FAQ pages
         if (!is_singular('faq')) {
             return;
         }
@@ -425,12 +509,10 @@ class FAQzin_CPT {
             return;
         }
         
-        // Get FAQ data
         $question = get_the_title($post->ID);
         $answer_raw = get_post_field('post_content', $post->ID);
         $answer_text = wp_strip_all_tags($answer_raw);
         
-        // Build QAPage schema
         $schema = array(
             '@context'   => 'https://schema.org',
             '@type'      => array('WebPage', 'QAPage'),
@@ -450,7 +532,6 @@ class FAQzin_CPT {
             ),
         );
         
-        // Output schema
         echo "\n<!-- FAQzin - Single FAQ Schema -->\n";
         echo '<script type="application/ld+json">';
         echo wp_json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
@@ -459,5 +540,4 @@ class FAQzin_CPT {
     }
 }
 
-// Initialize
 new FAQzin_CPT();
