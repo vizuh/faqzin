@@ -476,9 +476,16 @@ class FAQzin_CPT {
         /* Ensure content has breathing room */
         .single-faq main,
         body.single-faq main {
-            padding-top: 120px;
-            padding-bottom: 120px;
+            padding-top: 130px;
+            padding-bottom: 100px;
         }
+        @media screen and (max-width: 767px) {
+        .single-faq main,
+        body.single-faq main {
+        padding-top: 50%;
+        padding-bottom: 20%;
+       }
+      }
         </style>
         <?php
     }
