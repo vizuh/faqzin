@@ -476,8 +476,8 @@ class FAQzin_CPT {
         /* Ensure content has breathing room */
         .single-faq main,
         body.single-faq main {
-            padding-top: 40px;
-            padding-bottom: 60px;
+            padding-top: 120px;
+            padding-bottom: 120px;
         }
         </style>
         <?php
