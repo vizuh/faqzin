@@ -24,6 +24,9 @@ class FAQzin_CPT {
         add_filter('get_the_modified_date', array($this, 'remove_date'));
         add_action('wp_head', array($this, 'add_single_faq_css'), 999);
         
+        // Add H1 title and spacing on single FAQ pages
+        add_filter('the_content', array($this, 'add_faq_title_to_content'), 1);
+        
         // Add Order column
         add_filter('manage_faq_posts_columns', array($this, 'add_order_column'));
         add_action('manage_faq_posts_custom_column', array($this, 'show_order_column'), 10, 2);
@@ -36,6 +39,18 @@ class FAQzin_CPT {
         
         // Add Re-Order submenu page
         add_action('admin_menu', array($this, 'add_reorder_submenu'));
+    }
+    
+    /**
+     * Add H1 title before content on single FAQ pages
+     */
+    public function add_faq_title_to_content($content) {
+        if (is_singular('faq') && in_the_loop() && is_main_query()) {
+            global $post;
+            $title = '<h1 class="faqzin-single-title">' . esc_html(get_the_title()) . '</h1>';
+            return $title . $content;
+        }
+        return $content;
     }
     
     /**
@@ -429,6 +444,40 @@ class FAQzin_CPT {
             overflow: hidden !important;
             position: absolute !important;
             left: -9999px !important;
+        }
+        
+        /* Hide default title on single FAQ pages */
+        .single-faq .entry-title,
+        body.single-faq .entry-title,
+        article.faq .entry-title,
+        article.post-type-faq .entry-title {
+            display: none !important;
+        }
+        
+        /* Style custom H1 title */
+        .faqzin-single-title {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1.3;
+            margin: 0 0 30px 0;
+            padding: 0;
+            color: #333;
+        }
+        
+        /* Add spacing to content wrapper */
+        .single-faq .entry-content,
+        .single-faq article,
+        body.single-faq .entry-content,
+        body.single-faq article {
+            padding-top: 40px !important;
+            padding-bottom: 60px !important;
+        }
+        
+        /* Ensure content has breathing room */
+        .single-faq main,
+        body.single-faq main {
+            padding-top: 40px;
+            padding-bottom: 60px;
         }
         </style>
         <?php
