@@ -24,11 +24,162 @@ class FAQzin_CPT {
         add_filter('get_the_modified_date', array($this, 'remove_date'));
         add_action('wp_head', array($this, 'add_single_faq_css'), 999);
         
-        // Add Order column in admin
+        // Add Order column and Quick Edit
         add_filter('manage_faq_posts_columns', array($this, 'add_order_column'));
-        add_action('manage_faq_posts_custom_column', array($this, 'show_order_column'), 10, 2);
+        add_action('manage_faq_posts_custom_column', array($this, 'show_order_column_editable'), 10, 2);
         add_filter('manage_edit-faq_sortable_columns', array($this, 'make_order_column_sortable'));
         add_action('pre_get_posts', array($this, 'order_by_menu_order'));
+        
+        // Add Quick Edit field
+        add_action('quick_edit_custom_box', array($this, 'add_quick_edit_order'), 10, 2);
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        
+        // AJAX save order
+        add_action('wp_ajax_faqzin_save_order', array($this, 'ajax_save_order'));
+        
+        // Add Re-Order submenu page
+        add_action('admin_menu', array($this, 'add_reorder_submenu'));
+    }
+    
+    /**
+     * Add Re-Order submenu page
+     */
+    public function add_reorder_submenu() {
+        add_submenu_page(
+            'edit.php?post_type=faq',
+            __('Re-Order FAQs', 'faqzin'),
+            __('Re-Order', 'faqzin'),
+            'edit_posts',
+            'faqzin-reorder',
+            array($this, 'render_reorder_page')
+        );
+    }
+    
+    /**
+     * Render Re-Order page with drag & drop
+     */
+    public function render_reorder_page() {
+        // Save order if submitted
+        if (isset($_POST['faqzin_order_nonce']) && wp_verify_nonce($_POST['faqzin_order_nonce'], 'faqzin_save_order')) {
+            if (isset($_POST['faq_order']) && is_array($_POST['faq_order'])) {
+                $order = 0;
+                foreach ($_POST['faq_order'] as $faq_id) {
+                    wp_update_post(array(
+                        'ID' => intval($faq_id),
+                        'menu_order' => $order
+                    ));
+                    $order++;
+                }
+                echo '<div class="notice notice-success"><p>' . __('Order saved successfully!', 'faqzin') . '</p></div>';
+            }
+        }
+        
+        // Get all FAQs ordered by current menu_order
+        $faqs = get_posts(array(
+            'post_type' => 'faq',
+            'posts_per_page' => -1,
+            'orderby' => 'menu_order',
+            'order' => 'ASC',
+        ));
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Re-Order FAQs', 'faqzin'); ?></h1>
+            <p><?php _e('Drag and drop FAQs to reorder them. Click "Save Order" when done.', 'faqzin'); ?></p>
+            
+            <form method="post" action="">
+                <?php wp_nonce_field('faqzin_save_order', 'faqzin_order_nonce'); ?>
+                
+                <ul id="faqzin-sortable" style="max-width: 800px;">
+                    <?php foreach ($faqs as $faq) : ?>
+                        <li style="padding: 15px; margin: 5px 0; background: #fff; border: 1px solid #ccc; cursor: move; list-style: none;">
+                            <input type="hidden" name="faq_order[]" value="<?php echo esc_attr($faq->ID); ?>">
+                            <span style="display: inline-block; width: 40px; font-weight: bold; color: #666;">
+                                <?php echo esc_html($faq->menu_order); ?>
+                            </span>
+                            <span class="dashicons dashicons-menu" style="margin-right: 10px; color: #666;"></span>
+                            <strong><?php echo esc_html($faq->post_title); ?></strong>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+                
+                <p style="margin-top: 20px;">
+                    <button type="submit" class="button button-primary button-large">
+                        <?php _e('Save Order', 'faqzin'); ?>
+                    </button>
+                </p>
+            </form>
+        </div>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            $('#faqzin-sortable').sortable({
+                placeholder: 'ui-state-highlight',
+                update: function(event, ui) {
+                    // Update order numbers display
+                    $('#faqzin-sortable li').each(function(index) {
+                        $(this).find('span:first').text(index);
+                    });
+                }
+            });
+        });
+        </script>
+        
+        <style>
+        #faqzin-sortable {
+            padding: 0;
+        }
+        #faqzin-sortable li:hover {
+            background: #f0f0f1 !important;
+        }
+        .ui-state-highlight {
+            height: 60px;
+            background: #fffbcc;
+            border: 2px dashed #999;
+        }
+        </style>
+        <?php
+    }
+    
+    /**
+     * Enqueue admin scripts for inline editing
+     */
+    public function enqueue_admin_scripts($hook) {
+        global $post_type;
+        
+        if ($post_type === 'faq') {
+            // jQuery UI for sortable
+            wp_enqueue_script('jquery-ui-sortable');
+            
+            // Inline edit script
+            if ($hook === 'edit.php') {
+                wp_enqueue_script('faqzin-inline-edit', plugin_dir_url(dirname(__FILE__)) . 'assets/inline-edit.js', array('jquery'), '1.0', true);
+                wp_localize_script('faqzin-inline-edit', 'faqzinAjax', array(
+                    'ajax_url' => admin_url('admin-ajax.php'),
+                    'nonce' => wp_create_nonce('faqzin_inline_edit')
+                ));
+            }
+        }
+    }
+    
+    /**
+     * AJAX handler to save order
+     */
+    public function ajax_save_order() {
+        check_ajax_referer('faqzin_inline_edit', 'nonce');
+        
+        if (!current_user_can('edit_posts')) {
+            wp_send_json_error('Permission denied');
+        }
+        
+        $post_id = intval($_POST['post_id']);
+        $order = intval($_POST['order']);
+        
+        wp_update_post(array(
+            'ID' => $post_id,
+            'menu_order' => $order
+        ));
+        
+        wp_send_json_success(array('order' => $order));
     }
     
     /**
@@ -48,13 +199,48 @@ class FAQzin_CPT {
     }
     
     /**
-     * Display Order value in column
+     * Display Order value in column with inline editing
      */
-    public function show_order_column($column, $post_id) {
+    public function show_order_column_editable($column, $post_id) {
         if ($column === 'menu_order') {
             $order = get_post_field('menu_order', $post_id);
-            echo '<strong>' . esc_html($order) . '</strong>';
+            ?>
+            <div class="faqzin-order-wrapper" style="display: flex; align-items: center; gap: 5px;">
+                <input 
+                    type="number" 
+                    class="faqzin-order-input" 
+                    data-post-id="<?php echo esc_attr($post_id); ?>"
+                    value="<?php echo esc_attr($order); ?>" 
+                    style="width: 60px; text-align: center;"
+                    min="0"
+                >
+                <span class="faqzin-order-status" style="color: #999; display: none;">
+                    <span class="dashicons dashicons-yes" style="color: green;"></span>
+                </span>
+            </div>
+            <?php
         }
+    }
+    
+    /**
+     * Add Quick Edit field for Order
+     */
+    public function add_quick_edit_order($column_name, $post_type) {
+        if ($column_name !== 'menu_order' || $post_type !== 'faq') {
+            return;
+        }
+        ?>
+        <fieldset class="inline-edit-col-right">
+            <div class="inline-edit-col">
+                <label>
+                    <span class="title"><?php _e('Order', 'faqzin'); ?></span>
+                    <span class="input-text-wrap">
+                        <input type="number" name="menu_order" class="ptitle" value="" min="0">
+                    </span>
+                </label>
+            </div>
+        </fieldset>
+        <?php
     }
     
     /**
