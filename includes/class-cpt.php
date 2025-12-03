@@ -42,7 +42,7 @@ class FAQzin_CPT {
      * Add Re-Order submenu page
      */
     public function add_reorder_submenu() {
-        add_submenu_page(
+        $hook = add_submenu_page(
             'edit.php?post_type=faq',
             __('Re-Order FAQs', 'faqzin'),
             __('Re-Order', 'faqzin'),
@@ -50,6 +50,16 @@ class FAQzin_CPT {
             'faqzin-reorder',
             array($this, 'render_reorder_page')
         );
+        
+        // Enqueue scripts only on Re-Order page
+        add_action('admin_print_scripts-' . $hook, array($this, 'enqueue_reorder_scripts'));
+    }
+    
+    /**
+     * Enqueue scripts for Re-Order page
+     */
+    public function enqueue_reorder_scripts() {
+        wp_enqueue_script('jquery-ui-sortable');
     }
     
     /**
@@ -97,12 +107,12 @@ class FAQzin_CPT {
                 <strong><?php _e('Drag and drop FAQs to reorder them. Click "Save Order" when done.', 'faqzin'); ?></strong>
             </p>
             
-            <form method="post" action="">
+            <form method="post" action="" id="faqzin-reorder-form">
                 <?php wp_nonce_field('faqzin_save_order', 'faqzin_order_nonce'); ?>
                 
                 <ul id="faqzin-sortable" style="max-width: 900px; padding: 0; margin: 20px 0;">
                     <?php foreach ($faqs as $index => $faq) : ?>
-                        <li style="padding: 20px; margin: 8px 0; background: #fff; border: 1px solid #ddd; border-radius: 4px; cursor: move; list-style: none; display: flex; align-items: center; transition: all 0.3s;">
+                        <li data-id="<?php echo esc_attr($faq->ID); ?>" style="padding: 20px; margin: 8px 0; background: #fff; border: 1px solid #ddd; border-radius: 4px; cursor: move; list-style: none; display: flex; align-items: center; transition: all 0.3s;">
                             <input type="hidden" name="faq_order[]" value="<?php echo esc_attr($faq->ID); ?>">
                             <span style="display: inline-block; min-width: 50px; font-weight: bold; color: #2271b1; font-size: 18px;" class="order-number">
                                 <?php echo esc_html($index); ?>
@@ -133,19 +143,18 @@ class FAQzin_CPT {
             </form>
         </div>
         
-        <script>
+        <script type="text/javascript">
         jQuery(document).ready(function($) {
             $('#faqzin-sortable').sortable({
                 placeholder: 'faqzin-placeholder',
-                handle: 'li',
                 cursor: 'move',
                 opacity: 0.8,
                 tolerance: 'pointer',
                 start: function(e, ui) {
                     ui.placeholder.height(ui.item.height());
                 },
-                update: function(event, ui) {
-                    // Update order numbers display
+                stop: function(e, ui) {
+                    // Update order numbers immediately
                     $('#faqzin-sortable li').each(function(index) {
                         $(this).find('.order-number').text(index);
                     });
@@ -162,17 +171,19 @@ class FAQzin_CPT {
                     });
                 },
                 function() {
-                    $(this).css({
-                        'background': '#fff',
-                        'border-color': '#ddd',
-                        'box-shadow': 'none'
-                    });
+                    if (!$(this).hasClass('ui-sortable-helper')) {
+                        $(this).css({
+                            'background': '#fff',
+                            'border-color': '#ddd',
+                            'box-shadow': 'none'
+                        });
+                    }
                 }
             );
         });
         </script>
         
-        <style>
+        <style type="text/css">
         .faqzin-placeholder {
             background: #fff3cd !important;
             border: 2px dashed #ffc107 !important;
@@ -212,10 +223,16 @@ class FAQzin_CPT {
                         cursor: 'move',
                         axis: 'y',
                         opacity: 0.65,
-                        placeholder: 'faqzin-placeholder',
+                        placeholder: 'faqzin-placeholder-list',
                         start: function(e, ui) {
                             ui.placeholder.height(ui.helper.height());
                             ui.placeholder.css('visibility', 'visible');
+                        },
+                        stop: function(e, ui) {
+                            // Update order numbers IMMEDIATELY
+                            $('#the-list tr').each(function(index) {
+                                $(this).find('.column-menu_order strong').text(index);
+                            });
                         },
                         update: function(event, ui) {
                             var order = $('#the-list').sortable('serialize');
@@ -230,11 +247,6 @@ class FAQzin_CPT {
                                 },
                                 success: function(response) {
                                     if (response.success) {
-                                        // Update order numbers display
-                                        $('#the-list tr').each(function(index) {
-                                            $(this).find('.column-menu_order').html('<strong>' + index + '</strong>');
-                                        });
-                                        
                                         // Show success message
                                         if ($('.faqzin-notice').length === 0) {
                                             $('#wpbody-content .wrap h1').after('<div class=\"notice notice-success is-dismissible faqzin-notice\"><p><strong>Order saved successfully!</strong></p></div>');
@@ -254,7 +266,7 @@ class FAQzin_CPT {
             ");
             
             wp_add_inline_style('wp-admin', "
-                .faqzin-placeholder {
+                .faqzin-placeholder-list {
                     background: #fff3cd !important;
                     border: 2px dashed #ffc107 !important;
                 }
@@ -263,6 +275,8 @@ class FAQzin_CPT {
                     background: #f0f0f1;
                     text-align: center;
                     font-weight: bold;
+                    width: 60px !important;
+                    max-width: 60px !important;
                 }
                 .column-menu_order:hover {
                     background: #e0e0e1;
@@ -311,7 +325,7 @@ class FAQzin_CPT {
         
         foreach ($columns as $key => $value) {
             if ($key === 'title') {
-                $new_columns['menu_order'] = __('☰ Order', 'faqzin');
+                $new_columns['menu_order'] = __('☰', 'faqzin');
             }
             $new_columns[$key] = $value;
         }
