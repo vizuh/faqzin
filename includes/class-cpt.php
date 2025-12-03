@@ -23,6 +23,63 @@ class FAQzin_CPT {
         add_filter('the_modified_date', array($this, 'remove_date'));
         add_filter('get_the_modified_date', array($this, 'remove_date'));
         add_action('wp_head', array($this, 'add_single_faq_css'), 999);
+        
+        // Add Order column in admin
+        add_filter('manage_faq_posts_columns', array($this, 'add_order_column'));
+        add_action('manage_faq_posts_custom_column', array($this, 'show_order_column'), 10, 2);
+        add_filter('manage_edit-faq_sortable_columns', array($this, 'make_order_column_sortable'));
+        add_action('pre_get_posts', array($this, 'order_by_menu_order'));
+    }
+    
+    /**
+     * Add Order column to FAQ list
+     */
+    public function add_order_column($columns) {
+        $new_columns = array();
+        
+        foreach ($columns as $key => $value) {
+            if ($key === 'title') {
+                $new_columns['menu_order'] = __('Order', 'faqzin');
+            }
+            $new_columns[$key] = $value;
+        }
+        
+        return $new_columns;
+    }
+    
+    /**
+     * Display Order value in column
+     */
+    public function show_order_column($column, $post_id) {
+        if ($column === 'menu_order') {
+            $order = get_post_field('menu_order', $post_id);
+            echo '<strong>' . esc_html($order) . '</strong>';
+        }
+    }
+    
+    /**
+     * Make Order column sortable
+     */
+    public function make_order_column_sortable($columns) {
+        $columns['menu_order'] = 'menu_order';
+        return $columns;
+    }
+    
+    /**
+     * Order FAQs by menu_order by default
+     */
+    public function order_by_menu_order($query) {
+        if (!is_admin() || !$query->is_main_query()) {
+            return;
+        }
+        
+        if ($query->get('post_type') === 'faq') {
+            // If no orderby is set, order by menu_order
+            if (!$query->get('orderby')) {
+                $query->set('orderby', 'menu_order');
+                $query->set('order', 'ASC');
+            }
+        }
     }
     
     /**
