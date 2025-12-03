@@ -39,6 +39,34 @@ class FAQzin_CPT {
         
         // Add Re-Order submenu page
         add_action('admin_menu', array($this, 'add_reorder_submenu'));
+        
+        // Protect CSS from optimization plugins
+        add_filter('autoptimize_filter_css_exclude', array($this, 'exclude_from_autoptimize'));
+        add_filter('rocket_exclude_css', array($this, 'exclude_from_wp_rocket'));
+        add_filter('litespeed_optimize_css_exclude', array($this, 'exclude_from_litespeed'));
+    }
+    
+    /**
+     * Exclude from Autoptimize
+     */
+    public function exclude_from_autoptimize($exclude) {
+        return $exclude . ', faqzin-single-css';
+    }
+    
+    /**
+     * Exclude from WP Rocket
+     */
+    public function exclude_from_wp_rocket($excluded_files) {
+        $excluded_files[] = 'faqzin-single-css';
+        return $excluded_files;
+    }
+    
+    /**
+     * Exclude from LiteSpeed Cache
+     */
+    public function exclude_from_litespeed($list) {
+        $list[] = 'faqzin-single-css';
+        return $list;
     }
     
     /**
@@ -404,89 +432,85 @@ class FAQzin_CPT {
     
     /**
      * Add aggressive CSS to hide author/date on single FAQ pages
+     * PROTECTED FROM OPTIMIZATION PLUGINS
      */
     public function add_single_faq_css() {
         if (!is_singular('faq')) {
             return;
         }
         ?>
-        <style type="text/css">
-        /* Hide author and date on single FAQ pages - AGGRESSIVE */
-        .single-faq .entry-meta,
-        .single-faq .post-meta,
-        .single-faq .entry-footer,
-        .single-faq .posted-on,
-        .single-faq .byline,
-        .single-faq .author,
-        .single-faq .vcard,
-        .single-faq .updated,
-        .single-faq time,
-        .single-faq .entry-date,
-        .single-faq .published,
-        body.single-faq .entry-meta,
-        body.single-faq .byline,
-        body.single-faq time,
-        body.single-faq .posted-on,
-        body.single-faq .author,
-        article.faq .entry-meta,
-        article.faq .byline,
-        article.faq time,
-        article.post-type-faq .entry-meta,
-        article.post-type-faq .byline,
-        article.post-type-faq time {
-            display: none !important;
-            visibility: hidden !important;
-            opacity: 0 !important;
-            height: 0 !important;
-            width: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            overflow: hidden !important;
-            position: absolute !important;
-            left: -9999px !important;
-        }
-        
-        /* Hide default title on single FAQ pages */
-        .single-faq .entry-title,
-        body.single-faq .entry-title,
-        article.faq .entry-title,
-        article.post-type-faq .entry-title {
-            display: none !important;
-        }
-        
-        /* Style custom H1 title */
-        .faqzin-single-title {
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.3;
-            margin: 0 0 30px 0;
-            padding: 0;
-            color: #333;
-        }
-        
-        /* Add spacing to content wrapper */
-        .single-faq .entry-content,
-        .single-faq article,
-        body.single-faq .entry-content,
-        body.single-faq article {
-            padding-top: 40px !important;
-            padding-bottom: 60px !important;
-        }
-        
-        /* Ensure content has breathing room */
-        .single-faq main,
-        body.single-faq main {
-            padding-top: 130px;
-            padding-bottom: 100px;
-        }
-        @media screen and (max-width: 767px) {
-        .single-faq main,
-        body.single-faq main {
-        padding-top: 50%;
-        padding-bottom: 20%;
-       }
-      }
-        </style>
+<!-- FAQzin Critical CSS - DO NOT OPTIMIZE -->
+<style type="text/css" id="faqzin-single-css" data-no-optimize="1" data-noptimize="1" data-cfasync="false">
+/* Hide author and date on single FAQ pages - AGGRESSIVE */
+.single-faq .entry-meta,
+.single-faq .post-meta,
+.single-faq .entry-footer,
+.single-faq .posted-on,
+.single-faq .byline,
+.single-faq .author,
+.single-faq .vcard,
+.single-faq .updated,
+.single-faq time,
+.single-faq .entry-date,
+.single-faq .published,
+body.single-faq .entry-meta,
+body.single-faq .byline,
+body.single-faq time,
+body.single-faq .posted-on,
+body.single-faq .author,
+article.faq .entry-meta,
+article.faq .byline,
+article.faq time,
+article.post-type-faq .entry-meta,
+article.post-type-faq .byline,
+article.post-type-faq time {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* Hide default title on single FAQ pages */
+.single-faq .entry-title,
+body.single-faq .entry-title,
+article.faq .entry-title,
+article.post-type-faq .entry-title {
+    display: none !important;
+}
+
+/* Style custom H1 title */
+.faqzin-single-title {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 30px 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Add spacing to content wrapper */
+.single-faq .entry-content,
+.single-faq article,
+body.single-faq .entry-content,
+body.single-faq article {
+    padding-top: 40px !important;
+    padding-bottom: 60px !important;
+}
+
+/* Ensure content has breathing room */
+.single-faq main,
+body.single-faq main {
+    padding-top: 40px;
+    padding-bottom: 60px;
+}
+</style>
+<!-- /FAQzin Critical CSS -->
         <?php
     }
     
