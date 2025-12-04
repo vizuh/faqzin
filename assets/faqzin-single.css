@@ -1,0 +1,70 @@
+/* FAQzin Single FAQ Page Styles - DO NOT OPTIMIZE */
+
+/* Hide author and date on single FAQ pages - AGGRESSIVE */
+.single-faq .entry-meta,
+.single-faq .post-meta,
+.single-faq .entry-footer,
+.single-faq .posted-on,
+.single-faq .byline,
+.single-faq .author,
+.single-faq .vcard,
+.single-faq .updated,
+.single-faq time,
+.single-faq .entry-date,
+.single-faq .published,
+body.single-faq .entry-meta,
+body.single-faq .byline,
+body.single-faq time,
+body.single-faq .posted-on,
+body.single-faq .author,
+article.faq .entry-meta,
+article.faq .byline,
+article.faq time,
+article.post-type-faq .entry-meta,
+article.post-type-faq .byline,
+article.post-type-faq time {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Hide default title on single FAQ pages */
+.single-faq .entry-title,
+body.single-faq .entry-title,
+article.faq .entry-title,
+article.post-type-faq .entry-title {
+  display: none !important;
+}
+
+/* Style custom H1 title */
+.faqzin-single-title {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 30px 0;
+  padding: 0;
+  color: #333;
+}
+
+/* Add spacing to content wrapper */
+.single-faq .entry-content,
+.single-faq article,
+body.single-faq .entry-content,
+body.single-faq article {
+  padding-top: 40px !important;
+  padding-bottom: 60px !important;
+}
+
+/* Ensure content has breathing room */
+.single-faq main,
+body.single-faq main {
+  padding-top: 120px;
+  padding-bottom: 100px;
+}
