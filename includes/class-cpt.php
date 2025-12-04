@@ -22,7 +22,10 @@ class FAQzin_CPT {
         add_filter('get_the_time', array($this, 'remove_date'));
         add_filter('the_modified_date', array($this, 'remove_date'));
         add_filter('get_the_modified_date', array($this, 'remove_date'));
-        add_action('wp_head', array($this, 'add_single_faq_css'), 999);
+        
+        // SUPER PROTECTED CSS - Multiple methods
+        add_action('wp_head', array($this, 'add_single_faq_css_protected'), 999);
+        add_action('wp_footer', array($this, 'add_faq_css_fallback'), 999);
         
         // Add H1 title and spacing on single FAQ pages
         add_filter('the_content', array($this, 'add_faq_title_to_content'), 1);
@@ -40,24 +43,37 @@ class FAQzin_CPT {
         // Add Re-Order submenu page
         add_action('admin_menu', array($this, 'add_reorder_submenu'));
         
-        // Protect CSS from optimization plugins
+        // Protect from ALL optimizers
         add_filter('autoptimize_filter_css_exclude', array($this, 'exclude_from_autoptimize'));
         add_filter('rocket_exclude_css', array($this, 'exclude_from_wp_rocket'));
         add_filter('litespeed_optimize_css_exclude', array($this, 'exclude_from_litespeed'));
+        add_filter('psb_minify_html_exclude', array($this, 'exclude_from_page_speed_boost'), 10, 1);
+        add_filter('psb_css_defer_exclude', array($this, 'exclude_from_page_speed_boost'), 10, 1);
+    }
+    
+    /**
+     * Exclude from Page Speed Boost
+     */
+    public function exclude_from_page_speed_boost($exclude) {
+        if (is_array($exclude)) {
+            $exclude[] = 'faqzin-critical-css';
+            return $exclude;
+        }
+        return $exclude . ', faqzin-critical-css';
     }
     
     /**
      * Exclude from Autoptimize
      */
     public function exclude_from_autoptimize($exclude) {
-        return $exclude . ', faqzin-single-css';
+        return $exclude . ', faqzin-critical-css';
     }
     
     /**
      * Exclude from WP Rocket
      */
     public function exclude_from_wp_rocket($excluded_files) {
-        $excluded_files[] = 'faqzin-single-css';
+        $excluded_files[] = 'faqzin-critical-css';
         return $excluded_files;
     }
     
@@ -65,8 +81,144 @@ class FAQzin_CPT {
      * Exclude from LiteSpeed Cache
      */
     public function exclude_from_litespeed($list) {
-        $list[] = 'faqzin-single-css';
+        $list[] = 'faqzin-critical-css';
         return $list;
+    }
+    
+    /**
+     * Add SUPER PROTECTED CSS - Method 1 (Head)
+     */
+    public function add_single_faq_css_protected() {
+        if (!is_singular('faq')) {
+            return;
+        }
+        
+        $css = $this->get_faq_css();
+        $encoded = base64_encode($css);
+        ?>
+<!-- FAQZIN CRITICAL CSS - PROTECTED -->
+<script type="text/javascript">
+(function() {
+    var css = atob('<?php echo $encoded; ?>');
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.id = 'faqzin-critical-css';
+    style.setAttribute('data-no-optimize', '1');
+    style.setAttribute('data-noptimize', '1');
+    style.setAttribute('data-cfasync', 'false');
+    if (style.styleSheet) {
+        style.styleSheet.cssText = css;
+    } else {
+        style.appendChild(document.createTextNode(css));
+    }
+    document.head.appendChild(style);
+})();
+</script>
+<!-- /FAQZIN CRITICAL CSS -->
+        <?php
+    }
+    
+    /**
+     * Add CSS Fallback - Method 2 (Footer)
+     */
+    public function add_faq_css_fallback() {
+        if (!is_singular('faq')) {
+            return;
+        }
+        ?>
+<script type="text/javascript">
+(function() {
+    if (!document.getElementById('faqzin-critical-css')) {
+        var css = <?php echo json_encode($this->get_faq_css()); ?>;
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.id = 'faqzin-critical-css-fallback';
+        if (style.styleSheet) {
+            style.styleSheet.cssText = css;
+        } else {
+            style.appendChild(document.createTextNode(css));
+        }
+        document.head.appendChild(style);
+    }
+})();
+</script>
+        <?php
+    }
+    
+    /**
+     * Get FAQ CSS (centralized)
+     */
+    private function get_faq_css() {
+        return '
+/* Hide author and date on single FAQ pages */
+.single-faq .entry-meta,
+.single-faq .post-meta,
+.single-faq .entry-footer,
+.single-faq .posted-on,
+.single-faq .byline,
+.single-faq .author,
+.single-faq .vcard,
+.single-faq .updated,
+.single-faq time,
+.single-faq .entry-date,
+.single-faq .published,
+body.single-faq .entry-meta,
+body.single-faq .byline,
+body.single-faq time,
+body.single-faq .posted-on,
+body.single-faq .author,
+article.faq .entry-meta,
+article.faq .byline,
+article.faq time,
+article.post-type-faq .entry-meta,
+article.post-type-faq .byline,
+article.post-type-faq time {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* Hide default title on single FAQ pages */
+.single-faq .entry-title,
+body.single-faq .entry-title,
+article.faq .entry-title,
+article.post-type-faq .entry-title {
+    display: none !important;
+}
+
+/* Style custom H1 title */
+.faqzin-single-title {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 30px 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Add spacing to content wrapper */
+.single-faq .entry-content,
+.single-faq article,
+body.single-faq .entry-content,
+body.single-faq article {
+    padding-top: 40px !important;
+    padding-bottom: 60px !important;
+}
+
+/* Ensure content has breathing room */
+.single-faq main,
+body.single-faq main {
+    padding-top: 40px;
+    padding-bottom: 60px;
+}
+';
     }
     
     /**
@@ -94,7 +246,6 @@ class FAQzin_CPT {
             array($this, 'render_reorder_page')
         );
         
-        // Enqueue scripts only on Re-Order page
         add_action('admin_print_scripts-' . $hook, array($this, 'enqueue_reorder_scripts'));
     }
     
@@ -109,7 +260,6 @@ class FAQzin_CPT {
      * Render Re-Order page with drag & drop
      */
     public function render_reorder_page() {
-        // Save order if submitted
         if (isset($_POST['faqzin_order_nonce']) && wp_verify_nonce($_POST['faqzin_order_nonce'], 'faqzin_save_order')) {
             if (isset($_POST['faq_order']) && is_array($_POST['faq_order'])) {
                 $order = 0;
@@ -124,7 +274,6 @@ class FAQzin_CPT {
             }
         }
         
-        // Get all FAQs ordered by current menu_order
         $faqs = get_posts(array(
             'post_type' => 'faq',
             'posts_per_page' => -1,
@@ -197,14 +346,12 @@ class FAQzin_CPT {
                     ui.placeholder.height(ui.item.height());
                 },
                 stop: function(e, ui) {
-                    // Update order numbers immediately
                     $('#faqzin-sortable li').each(function(index) {
                         $(this).find('.order-number').text(index);
                     });
                 }
             });
             
-            // Hover effect
             $('#faqzin-sortable li').hover(
                 function() {
                     $(this).css({
@@ -272,7 +419,6 @@ class FAQzin_CPT {
                             ui.placeholder.css('visibility', 'visible');
                         },
                         stop: function(e, ui) {
-                            // Update order numbers IMMEDIATELY
                             $('#the-list tr').each(function(index) {
                                 $(this).find('.column-menu_order strong').text(index);
                             });
@@ -290,7 +436,6 @@ class FAQzin_CPT {
                                 },
                                 success: function(response) {
                                     if (response.success) {
-                                        // Show success message
                                         if ($('.faqzin-notice').length === 0) {
                                             $('#wpbody-content .wrap h1').after('<div class=\"notice notice-success is-dismissible faqzin-notice\"><p><strong>Order saved successfully!</strong></p></div>');
                                             setTimeout(function() {
@@ -303,7 +448,6 @@ class FAQzin_CPT {
                         }
                     });
                     
-                    // Add drag cursor on hover
                     $('#the-list .column-menu_order').css('cursor', 'move');
                 });
             ");
@@ -428,90 +572,6 @@ class FAQzin_CPT {
             return '';
         }
         return $date;
-    }
-    
-    /**
-     * Add aggressive CSS to hide author/date on single FAQ pages
-     * PROTECTED FROM OPTIMIZATION PLUGINS
-     */
-    public function add_single_faq_css() {
-        if (!is_singular('faq')) {
-            return;
-        }
-        ?>
-<!-- FAQzin Critical CSS - DO NOT OPTIMIZE -->
-<style type="text/css" id="faqzin-single-css" data-no-optimize="1" data-noptimize="1" data-cfasync="false">
-/* Hide author and date on single FAQ pages - AGGRESSIVE */
-.single-faq .entry-meta,
-.single-faq .post-meta,
-.single-faq .entry-footer,
-.single-faq .posted-on,
-.single-faq .byline,
-.single-faq .author,
-.single-faq .vcard,
-.single-faq .updated,
-.single-faq time,
-.single-faq .entry-date,
-.single-faq .published,
-body.single-faq .entry-meta,
-body.single-faq .byline,
-body.single-faq time,
-body.single-faq .posted-on,
-body.single-faq .author,
-article.faq .entry-meta,
-article.faq .byline,
-article.faq time,
-article.post-type-faq .entry-meta,
-article.post-type-faq .byline,
-article.post-type-faq time {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    position: absolute !important;
-    left: -9999px !important;
-}
-
-/* Hide default title on single FAQ pages */
-.single-faq .entry-title,
-body.single-faq .entry-title,
-article.faq .entry-title,
-article.post-type-faq .entry-title {
-    display: none !important;
-}
-
-/* Style custom H1 title */
-.faqzin-single-title {
-    font-size: 32px;
-    font-weight: 700;
-    line-height: 1.3;
-    margin: 0 0 30px 0;
-    padding: 0;
-    color: #333;
-}
-
-/* Add spacing to content wrapper */
-.single-faq .entry-content,
-.single-faq article,
-body.single-faq .entry-content,
-body.single-faq article {
-    padding-top: 40px !important;
-    padding-bottom: 60px !important;
-}
-
-/* Ensure content has breathing room */
-.single-faq main,
-body.single-faq main {
-    padding-top: 40px;
-    padding-bottom: 60px;
-}
-</style>
-<!-- /FAQzin Critical CSS -->
-        <?php
     }
     
     /**
