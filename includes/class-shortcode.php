@@ -152,7 +152,7 @@ class FAQzin_Shortcode {
 .faqzin-answer a:hover{text-decoration:underline}
 .faqzin-answer strong{color:#2c3e50;font-weight:600}
 .faqzin-answer code{background:#f4f4f4;padding:2px 6px;border-radius:3px;font-family:monospace;font-size:.9em}
-@media(max-width:767px){.faqzin-question-wrapper{padding:18px 16px}.faqzin-question{font-size:16px;padding-left:28px;padding-right:16px}.faqzin-question:before{width:20px;height:20px;font-size:11px}.faqzin-answer{padding:16px 16px 20px 44px;font-size:14px}.faqzin-answer:before{width:20px;height:20px;line-height:20px;font-size:11px;margin-left:-28px}.faqzin-icon{width:28px;height:28px;font-size:20px}.faqzin-list{gap:10px}}
+@media(max-width:767px){.faqzin-question-wrapper{padding:18px 16px}.faqzin-question{font-size:16px;padding-left:28px;padding-right:16px}.faqzin-question:before{width:20px;height:20px;font-size:11px}.faqzin-answer{padding:16px 16px 20px 44px;font-size:14px}.faqzin-answer:before{width:20px;height:20px;line-height:20px;font-size:11px;margin-left:-28px}.faqzin-icon{width:28px;height:28px;font-size:20px}.faqzin-list{gap:10px; padding:10px}}
 @media(max-width:480px){.faqzin-question-wrapper{padding:16px 14px}.faqzin-question{font-size:14px}.faqzin-answer{font-size:13px}}
 .faqzin-question-wrapper:focus{outline:2px solid #007bff;outline-offset:2px}
 @media print{.faqzin-item{page-break-inside:avoid}.faqzin-item[open]{border:1px solid #333}}
