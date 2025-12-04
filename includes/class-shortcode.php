@@ -23,10 +23,6 @@ class FAQzin_Shortcode {
      * [faqzin class="my-custom-class"]
      */
     public function render_shortcode($atts) {
-        // Enqueue assets
-        wp_enqueue_style('faqzin-styles');
-        wp_enqueue_script('faqzin-accordion');
-        
         // Parse attributes
         $atts = shortcode_atts(array(
             'category'     => '',
@@ -68,6 +64,9 @@ class FAQzin_Shortcode {
         // Start output buffering
         ob_start();
         
+        // OUTPUT INLINE CSS FIRST - ALWAYS LOADS!
+        $this->output_inline_css();
+        
         // Wrapper classes
         $wrapper_classes = array('faqzin-container');
         if (!empty($atts['class'])) {
@@ -107,7 +106,58 @@ class FAQzin_Shortcode {
             $this->output_schema($faqs);
         }
         
+        // Output inline JavaScript for accordion
+        $this->output_inline_js();
+        
         return ob_get_clean();
+    }
+    
+    /**
+     * Output inline CSS - ALWAYS LOADS!
+     */
+    private function output_inline_css() {
+        static $css_loaded = false;
+        if ($css_loaded) {
+            return;
+        }
+        $css_loaded = true;
+        ?>
+<style data-no-optimize="1" data-noptimize="1">
+.faqzin-container{max-width:100%;margin:0 auto}
+.faqzin-list{display:flex;flex-direction:column;gap:12px}
+.faqzin-item{background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;transition:all .3s ease}
+.faqzin-item:hover{border-color:#d1d5db;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.faqzin-item[open]{border-color:#3b82f6}
+.faqzin-question-wrapper{display:flex;align-items:center;justify-content:space-between;padding:20px;cursor:pointer;user-select:none;transition:background-color .2s;gap:16px}
+.faqzin-question-wrapper:hover{background-color:#f9fafb}
+.faqzin-item[open] .faqzin-question-wrapper{background-color:#eff6ff}
+.faqzin-question-wrapper::before{content:"Q";display:flex;align-items:center;justify-content:center;width:32px;height:32px;background:#3b82f6;color:#fff;border-radius:6px;font-weight:700;font-size:16px;flex-shrink:0}
+.faqzin-question{flex:1;font-size:16px;font-weight:600;color:#1f2937;line-height:1.5}
+.faqzin-icon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;color:#3b82f6;font-size:20px;font-weight:700;transition:transform .3s;flex-shrink:0}
+.faqzin-item[open] .faqzin-icon{transform:rotate(45deg)}
+.faqzin-answer{padding:0 20px 20px 68px;color:#4b5563;font-size:15px;line-height:1.7;animation:slideDown .3s ease}
+.faqzin-answer p{margin:0 0 12px 0}
+.faqzin-answer p:last-child{margin-bottom:0}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.faqzin-question-wrapper{padding:16px}.faqzin-question{font-size:15px}.faqzin-answer{padding:0 16px 16px 56px;font-size:14px}}
+</style>
+        <?php
+    }
+    
+    /**
+     * Output inline JavaScript for accordion
+     */
+    private function output_inline_js() {
+        static $js_loaded = false;
+        if ($js_loaded) {
+            return;
+        }
+        $js_loaded = true;
+        ?>
+<script data-no-optimize="1" data-noptimize="1">
+(function(){if(typeof window.faqzinLoaded!=='undefined')return;window.faqzinLoaded=true;document.addEventListener('DOMContentLoaded',function(){var items=document.querySelectorAll('.faqzin-item');items.forEach(function(item){var summary=item.querySelector('.faqzin-question-wrapper');var answer=item.querySelector('.faqzin-answer');if(summary&&answer){summary.addEventListener('click',function(e){var isOpen=item.hasAttribute('open');items.forEach(function(otherItem){if(otherItem!==item&&otherItem.hasAttribute('open')){otherItem.removeAttribute('open');var otherSummary=otherItem.querySelector('.faqzin-question-wrapper');var otherAnswer=otherItem.querySelector('.faqzin-answer');if(otherSummary)otherSummary.setAttribute('aria-expanded','false');if(otherAnswer)otherAnswer.setAttribute('aria-hidden','true')}});if(!isOpen){item.setAttribute('open','');summary.setAttribute('aria-expanded','true');answer.setAttribute('aria-hidden','false')}else{item.removeAttribute('open');summary.setAttribute('aria-expanded','false');answer.setAttribute('aria-hidden','true')}})}})})})();
+</script>
+        <?php
     }
     
     /**
