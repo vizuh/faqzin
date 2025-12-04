@@ -23,10 +23,28 @@ class FAQzin_CPT {
         add_filter('the_modified_date', array($this, 'remove_date'));
         add_filter('get_the_modified_date', array($this, 'remove_date'));
         
-        // Enqueue CSS for single FAQ pages
-        add_action('wp_enqueue_scripts', array($this, 'enqueue_single_faq_css'), 999);
+        // DISABLE Page Speed Boost on FAQ pages
+        add_action('template_redirect', array($this, 'disable_page_speed_boost'));
         
-        // Add H1 title and spacing on single FAQ pages
+        // EXCLUDE FAQ assets from ALL optimizers
+        add_filter('psb_css_files_to_exclude', array($this, 'exclude_faq_assets_from_psb'));
+        add_filter('psb_js_files_to_exclude', array($this, 'exclude_faq_assets_from_psb'));
+        add_filter('autoptimize_filter_css_exclude', array($this, 'exclude_faq_assets_string'));
+        add_filter('autoptimize_filter_js_exclude', array($this, 'exclude_faq_assets_string'));
+        add_filter('rocket_exclude_css', array($this, 'exclude_faq_assets_array'));
+        add_filter('rocket_exclude_js', array($this, 'exclude_faq_assets_array'));
+        add_filter('litespeed_optimize_css_exclude', array($this, 'exclude_faq_assets_array'));
+        add_filter('litespeed_optimize_js_exclude', array($this, 'exclude_faq_assets_array'));
+        
+        // Add attributes to CSS/JS tags
+        add_filter('style_loader_tag', array($this, 'add_no_optimize_to_css'), 10, 2);
+        add_filter('script_loader_tag', array($this, 'add_no_optimize_to_js'), 10, 2);
+        
+        // Add inline CSS in body_class
+        add_filter('body_class', array($this, 'add_faq_body_class'));
+        add_action('wp_footer', array($this, 'add_inline_css_footer'), 9999);
+        
+        // Add H1 title with inline styles
         add_filter('the_content', array($this, 'add_faq_title_to_content'), 1);
         
         // Add Order column
@@ -41,94 +59,161 @@ class FAQzin_CPT {
         
         // Add Re-Order submenu page
         add_action('admin_menu', array($this, 'add_reorder_submenu'));
-        
-        // Protect CSS from ALL optimizers
-        add_filter('autoptimize_filter_css_exclude', array($this, 'exclude_css_from_optimizers'));
-        add_filter('rocket_exclude_css', array($this, 'exclude_css_from_rocket'));
-        add_filter('litespeed_optimize_css_exclude', array($this, 'exclude_css_from_optimizers'));
-        add_filter('psb_css_files_to_exclude', array($this, 'exclude_css_from_page_speed_boost'));
     }
     
     /**
-     * Exclude CSS from Page Speed Boost
+     * Exclude FAQ assets from Page Speed Boost (array)
      */
-    public function exclude_css_from_page_speed_boost($excluded) {
+    public function exclude_faq_assets_from_psb($excluded) {
         if (!is_array($excluded)) {
             $excluded = array();
         }
-        $excluded[] = 'faqzin-single';
-        $excluded[] = 'faqzin-single.css';
+        $excluded[] = 'faqzin';
+        $excluded[] = 'faqzin-styles';
+        $excluded[] = 'faqzin-accordion';
+        $excluded[] = 'faqzin.css';
+        $excluded[] = 'faqzin.js';
+        $excluded[] = '/assets/faqzin.css';
+        $excluded[] = '/assets/faqzin.js';
         return $excluded;
     }
     
     /**
-     * Exclude CSS from Autoptimize and LiteSpeed
+     * Exclude FAQ assets (string format)
      */
-    public function exclude_css_from_optimizers($exclude) {
+    public function exclude_faq_assets_string($exclude) {
         if (is_array($exclude)) {
-            $exclude[] = 'faqzin-single';
-            return $exclude;
+            return $this->exclude_faq_assets_from_psb($exclude);
         }
-        return $exclude . ', faqzin-single';
+        return $exclude . ', faqzin, faqzin-styles, faqzin-accordion, faqzin.css, faqzin.js';
     }
     
     /**
-     * Exclude CSS from WP Rocket
+     * Exclude FAQ assets (array format)
      */
-    public function exclude_css_from_rocket($excluded_files) {
-        if (!is_array($excluded_files)) {
-            $excluded_files = array();
+    public function exclude_faq_assets_array($excluded) {
+        if (!is_array($excluded)) {
+            $excluded = array();
         }
-        $excluded_files[] = '/wp-content/plugins/faqzin-main/assets/faqzin-single.css';
-        return $excluded_files;
+        $excluded[] = 'faqzin';
+        $excluded[] = 'faqzin-styles';
+        $excluded[] = 'faqzin-accordion';
+        $excluded[] = '/faqzin.css';
+        $excluded[] = '/faqzin.js';
+        return $excluded;
     }
     
     /**
-     * Enqueue CSS for single FAQ pages
+     * Add no-optimize attributes to CSS
      */
-    public function enqueue_single_faq_css() {
-        if (!is_singular('faq')) {
-            return;
-        }
-        
-        $css_file = plugin_dir_url(__FILE__) . '../assets/faqzin-single.css';
-        $css_path = plugin_dir_path(__FILE__) . '../assets/faqzin-single.css';
-        $version = file_exists($css_path) ? filemtime($css_path) : '1.0.0';
-        
-        wp_enqueue_style(
-            'faqzin-single',
-            $css_file,
-            array(),
-            $version,
-            'all'
-        );
-        
-        // Add data attributes to prevent optimization
-        add_filter('style_loader_tag', array($this, 'add_css_attributes'), 10, 2);
-    }
-    
-    /**
-     * Add attributes to CSS link tag
-     */
-    public function add_css_attributes($html, $handle) {
-        if ($handle === 'faqzin-single') {
-            $html = str_replace(
-                "id='faqzin-single-css'",
-                "id='faqzin-single-css' data-no-optimize='1' data-noptimize='1' data-cfasync='false'",
-                $html
-            );
+    public function add_no_optimize_to_css($html, $handle) {
+        if (strpos($handle, 'faqzin') !== false) {
+            $html = str_replace('<link ', '<link data-no-optimize="1" data-noptimize="1" data-cfasync="false" ', $html);
         }
         return $html;
     }
     
     /**
-     * Add H1 title before content on single FAQ pages
+     * Add no-optimize attributes to JS
+     */
+    public function add_no_optimize_to_js($html, $handle) {
+        if (strpos($handle, 'faqzin') !== false) {
+            $html = str_replace('<script ', '<script data-no-optimize="1" data-noptimize="1" data-cfasync="false" ', $html);
+        }
+        return $html;
+    }
+    
+    /**
+     * DISABLE Page Speed Boost on FAQ pages
+     */
+    public function disable_page_speed_boost() {
+        if (is_singular('faq')) {
+            // Disable Page Speed Boost
+            add_filter('psb_active', '__return_false');
+            add_filter('psb_minify_html', '__return_false');
+            add_filter('psb_minify_css', '__return_false');
+            add_filter('psb_minify_js', '__return_false');
+            add_filter('psb_defer_css', '__return_false');
+            add_filter('psb_defer_js', '__return_false');
+            
+            // Also disable other optimizers just in case
+            add_filter('autoptimize_filter_noptimize', '__return_true');
+            add_filter('rocket_override_donotcachepage', '__return_true');
+            add_filter('litespeed_disable_all', '__return_true');
+        }
+    }
+    
+    /**
+     * Add FAQ body class
+     */
+    public function add_faq_body_class($classes) {
+        if (is_singular('faq')) {
+            $classes[] = 'faqzin-single-page';
+        }
+        return $classes;
+    }
+    
+    /**
+     * Add inline CSS in footer (last resort)
+     */
+    public function add_inline_css_footer() {
+        if (!is_singular('faq')) {
+            return;
+        }
+        ?>
+<style>
+.single-faq .entry-meta,
+.single-faq .post-meta,
+.single-faq .entry-footer,
+.single-faq .posted-on,
+.single-faq .byline,
+.single-faq .author,
+.single-faq .vcard,
+.single-faq .updated,
+.single-faq time,
+.single-faq .entry-date,
+.single-faq .published,
+body.single-faq .entry-meta,
+body.single-faq .byline,
+body.single-faq time,
+body.single-faq .posted-on,
+body.single-faq .author,
+article.faq .entry-meta,
+article.faq .byline,
+article.faq time,
+article.post-type-faq .entry-meta,
+article.post-type-faq .byline,
+article.post-type-faq time{display:none!important;visibility:hidden!important;opacity:0!important;height:0!important;width:0!important;margin:0!important;padding:0!important;overflow:hidden!important;position:absolute!important;left:-9999px!important}
+.single-faq .entry-title,
+body.single-faq .entry-title,
+article.faq .entry-title,
+article.post-type-faq .entry-title{display:none!important}
+.faqzin-single-title{font-size:32px;font-weight:700;line-height:1.3;margin:0 0 30px 0;padding:0;color:#333}
+.single-faq .entry-content,
+.single-faq article,
+body.single-faq .entry-content,
+body.single-faq article{padding-top:40px!important;padding-bottom:60px!important}
+.single-faq main,
+body.single-faq main{padding-top:40px;padding-bottom:60px}
+</style>
+        <?php
+    }
+    
+    /**
+     * Add H1 title with inline styles before content
      */
     public function add_faq_title_to_content($content) {
         if (is_singular('faq') && in_the_loop() && is_main_query()) {
             global $post;
-            $title = '<h1 class="faqzin-single-title">' . esc_html(get_the_title()) . '</h1>';
-            return $title . $content;
+            
+            $title = '<h1 class="faqzin-single-title" style="font-size:32px;font-weight:700;line-height:1.3;margin:0 0 30px 0;padding:0;color:#333;">' 
+                   . esc_html(get_the_title()) 
+                   . '</h1>';
+            
+            // Wrap content with spacing
+            $content = '<div style="padding-top:40px;padding-bottom:60px;">' . $title . $content . '</div>';
+            
+            return $content;
         }
         return $content;
     }
