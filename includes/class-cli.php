@@ -97,10 +97,13 @@ class FAQzin_CLI {
                 'post_status'  => 'draft' === ($faq['status'] ?? '') ? 'draft' : 'publish',
                 'menu_order'   => (int) ($faq['order'] ?? 0),
             );
+            // wp_update_post keeps the fields not listed (author, date, password, excerpt).
             if ($existing_id) {
                 $post['ID'] = $existing_id;
+                $id = wp_update_post(wp_slash($post), true);
+            } else {
+                $id = wp_insert_post(wp_slash($post), true);
             }
-            $id = wp_insert_post(wp_slash($post), true);
             if (is_wp_error($id)) {
                 WP_CLI::warning("FAQ {$faq['slug']}: " . $id->get_error_message());
                 $skipped++;

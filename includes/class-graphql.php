@@ -20,6 +20,10 @@ class FAQzin_GraphQL {
             'type'        => 'String',
             'description' => __('The answer as plain text: a blank line between paragraphs, a single line break within one.', 'faqzin'),
             'resolve'     => function ($post) {
+                // A restricted post (password, or a draft the viewer may not read) hides its content.
+                if ($post->isRestricted) {
+                    return null;
+                }
                 return self::answer_text((string) get_post_field('post_content', $post->databaseId));
             },
         ));
@@ -27,6 +31,9 @@ class FAQzin_GraphQL {
             'type'        => 'Boolean',
             'description' => __('Marked Featured in the FAQ editor.', 'faqzin'),
             'resolve'     => function ($post) {
+                if ($post->isRestricted) {
+                    return null;
+                }
                 return FAQzin_Fields::is_featured($post->databaseId);
             },
         ));
@@ -43,8 +50,8 @@ class FAQzin_GraphQL {
      * The answer's post content (blocks or classic HTML) as plain text.
      */
     public static function answer_text($content) {
-        $html = do_blocks($content);
-        if (false === stripos($html, '<p')) {
+        $html = do_blocks(strip_shortcodes(wp_check_invalid_utf8($content, true)));
+        if (!preg_match('#<p[\s>]#i', $html)) {
             $html = wpautop($html);
         }
         // Whitespace in HTML is not a line break; only the tags below make one.
