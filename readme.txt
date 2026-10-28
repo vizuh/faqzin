@@ -3,7 +3,7 @@ Contributors: pauloreducino, hfdutra, atroci
 Tags: faq, accordion, schema, elementor, divi
 Requires at least: 5.8
 Tested up to: 7.1
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -55,6 +55,10 @@ Yes. Install WPGraphQL and tick **FAQs > Settings > Headless mode**. The other s
 3.  Settings Page
 
 == Changelog ==
+
+= 2.1.1 =
+*   Fix: all admin and shortcode output escaped; Re-Order inputs sanitised (WordPress.org Plugin Check).
+*   Fix: translations load through WordPress (removed the manual text-domain loader); hidden files left out of the release zip.
 
 = 2.1.0 =
 *   New: WPGraphQL support: `faqs` and `faqCategories`, with `answerText` (plain-text answer), `featured` and category `order`.

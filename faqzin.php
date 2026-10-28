@@ -3,7 +3,7 @@
  * Plugin Name: FAQzin
  * Plugin URI: https://vizuh.com
  * Description: Professional FAQ Manager with Schema, HTML5 Accordion, Divi & Elementor Ready, and a headless mode for WPGraphQL sites
- * Version: 2.1.0
+ * Version: 2.1.1
  * Author: Vizuh
  * Author URI: https://vizuh.com
  * License: GPLv2 or later
@@ -16,7 +16,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('FAQZIN_VERSION', '2.1.0');
+define('FAQZIN_VERSION', '2.1.1');
 define('FAQZIN_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FAQZIN_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -55,12 +55,7 @@ class FAQzin_Manager {
     }
     
     private function init_hooks() {
-        add_action('plugins_loaded', array($this, 'load_textdomain'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
-    }
-    
-    public function load_textdomain() {
-        load_plugin_textdomain('faqzin', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
     
     public function enqueue_assets() {

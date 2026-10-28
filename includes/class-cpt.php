@@ -263,17 +263,17 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
      * Render Re-Order page with drag & drop
      */
     public function render_reorder_page() {
-        if (isset($_POST['faqzin_order_nonce']) && wp_verify_nonce($_POST['faqzin_order_nonce'], 'faqzin_save_order')) {
+        if (isset($_POST['faqzin_order_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['faqzin_order_nonce'])), 'faqzin_save_order')) {
             if (isset($_POST['faq_order']) && is_array($_POST['faq_order'])) {
                 $order = 0;
-                foreach ($_POST['faq_order'] as $faq_id) {
+                foreach (array_map('absint', wp_unslash($_POST['faq_order'])) as $faq_id) {
                     wp_update_post(array(
                         'ID' => intval($faq_id),
                         'menu_order' => $order
                     ));
                     $order++;
                 }
-                echo '<div class="notice notice-success is-dismissible"><p><strong>' . __('Order saved successfully!', 'faqzin') . '</strong></p></div>';
+                echo '<div class="notice notice-success is-dismissible"><p><strong>' . esc_html__('Order saved successfully!', 'faqzin') . '</strong></p></div>';
             }
         }
         
@@ -287,9 +287,9 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
         if (empty($faqs)) {
             ?>
             <div class="wrap">
-                <h1><?php _e('Re-Order FAQs', 'faqzin'); ?></h1>
+                <h1><?php esc_html_e('Re-Order FAQs', 'faqzin'); ?></h1>
                 <div class="notice notice-warning">
-                    <p><?php _e('No FAQs found. Please create some FAQs first.', 'faqzin'); ?></p>
+                    <p><?php esc_html_e('No FAQs found. Please create some FAQs first.', 'faqzin'); ?></p>
                 </div>
             </div>
             <?php
@@ -297,9 +297,9 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
         }
         ?>
         <div class="wrap">
-            <h1><?php _e('Re-Order FAQs', 'faqzin'); ?></h1>
+            <h1><?php esc_html_e('Re-Order FAQs', 'faqzin'); ?></h1>
             <p style="font-size: 14px; color: #666;">
-                <strong><?php _e('Drag and drop FAQs to reorder them. Click "Save Order" when done.', 'faqzin'); ?></strong>
+                <strong><?php esc_html_e('Drag and drop FAQs to reorder them. Click "Save Order" when done.', 'faqzin'); ?></strong>
             </p>
             
             <form method="post" action="" id="faqzin-reorder-form">
@@ -329,10 +329,10 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
                 <p style="margin-top: 30px;">
                     <button type="submit" class="button button-primary button-large" style="padding: 10px 30px;">
                         <span class="dashicons dashicons-yes" style="margin-top: 3px;"></span>
-                        <?php _e('Save Order', 'faqzin'); ?>
+                        <?php esc_html_e('Save Order', 'faqzin'); ?>
                     </button>
-                    <a href="<?php echo admin_url('edit.php?post_type=faq'); ?>" class="button button-secondary button-large" style="margin-left: 10px; padding: 10px 30px;">
-                        <?php _e('Back to All FAQs', 'faqzin'); ?>
+                    <a href="<?php echo esc_url(admin_url('edit.php?post_type=faq')); ?>" class="button button-secondary button-large" style="margin-left: 10px; padding: 10px 30px;">
+                        <?php esc_html_e('Back to All FAQs', 'faqzin'); ?>
                     </a>
                 </p>
             </form>
@@ -489,7 +489,10 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
             wp_send_json_error('Permission denied');
         }
         
-        parse_str($_POST['order'], $data);
+        if (!isset($_POST['order'])) {
+            wp_send_json_error('Invalid data');
+        }
+        parse_str(sanitize_text_field(wp_unslash($_POST['order'])), $data);
         
         if (!is_array($data)) {
             wp_send_json_error('Invalid data');
