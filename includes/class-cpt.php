@@ -13,6 +13,8 @@ class FAQzin_CPT {
         add_action('init', array($this, 'register_post_type'));
         add_action('init', array($this, 'register_taxonomy'));
         add_action('wp_head', array($this, 'add_single_faq_schema'));
+        // Headless: query-string FAQ URLs (?post_type=faq&p=…, ?taxonomy=faq_category…) are 404s too.
+        add_action('template_redirect', array($this, 'headless_not_found'), 1);
         
         // Remove author/date from single FAQ pages
         add_filter('the_author', array($this, 'remove_author'));
@@ -121,6 +123,22 @@ class FAQzin_CPT {
             $html = str_replace('<script ', '<script data-no-optimize="1" data-noptimize="1" data-cfasync="false" ', $html);
         }
         return $html;
+    }
+    
+    /**
+     * Headless mode: no FAQ page, list or category archive on WordPress. The post type stays
+     * publicly queryable (WPGraphQL needs it), so the query-string URLs are turned into 404s here.
+     */
+    public function headless_not_found() {
+        if (!faqzin_is_headless()) {
+            return;
+        }
+        if (is_singular('faq') || in_array('faq', (array) get_query_var('post_type'), true) || is_tax('faq_category')) {
+            global $wp_query;
+            $wp_query->set_404();
+            status_header(404);
+            nocache_headers();
+        }
     }
     
     /**
@@ -579,21 +597,28 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
             'name_admin_bar'        => __('FAQ', 'faqzin'),
         );
         
+        // Headless: no FAQ pages or archive here; WPGraphQL still serves them to the other site.
+        $headless = faqzin_is_headless();
         $args = array(
             'labels'                => $labels,
-            'public'                => true,
+            'public'                => !$headless,
             'publicly_queryable'    => true,
+            'exclude_from_search'   => $headless,
             'show_ui'               => true,
             'show_in_menu'          => true,
-            'query_var'             => true,
-            'rewrite'               => array('slug' => 'faq'),
+            'show_in_nav_menus'     => !$headless,
+            'query_var'             => !$headless,
+            'rewrite'               => $headless ? false : array('slug' => 'faq'),
             'capability_type'       => 'post',
-            'has_archive'           => true,
+            'has_archive'           => !$headless,
             'hierarchical'          => false,
             'menu_position'         => 25,
             'menu_icon'             => 'dashicons-editor-help',
             'supports'              => array('title', 'editor', 'revisions', 'page-attributes'),
             'show_in_rest'          => true,
+            'show_in_graphql'       => true,
+            'graphql_single_name'   => 'faq',
+            'graphql_plural_name'   => 'faqs',
         );
         
         register_post_type('faq', $args);
@@ -619,16 +644,22 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
             'menu_name'                  => __('Categories', 'faqzin'),
         );
         
+        $headless = faqzin_is_headless();
         $args = array(
             'labels'                => $labels,
             'hierarchical'          => true,
-            'public'                => true,
+            'public'                => !$headless,
+            'publicly_queryable'    => true,
             'show_ui'               => true,
             'show_admin_column'     => true,
-            'show_in_nav_menus'     => true,
-            'show_tagcloud'         => true,
+            'show_in_nav_menus'     => !$headless,
+            'show_tagcloud'         => !$headless,
             'show_in_rest'          => true,
-            'rewrite'               => array('slug' => 'faq-category'),
+            'query_var'             => !$headless,
+            'rewrite'               => $headless ? false : array('slug' => 'faq-category'),
+            'show_in_graphql'       => true,
+            'graphql_single_name'   => 'faqCategory',
+            'graphql_plural_name'   => 'faqCategories',
         );
         
         register_taxonomy('faq_category', array('faq'), $args);
@@ -638,7 +669,7 @@ body.single-faq main{padding-top:40px;padding-bottom:60px}
      * Add schema.org markup to single FAQ pages
      */
     public function add_single_faq_schema() {
-        if (!is_singular('faq')) {
+        if (faqzin_is_headless() || !is_singular('faq')) {
             return;
         }
         
