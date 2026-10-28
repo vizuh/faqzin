@@ -70,9 +70,9 @@ class FAQzin_Fields {
         ?>
         <label>
             <input type="checkbox" name="faqzin_featured" value="1" <?php checked(self::is_featured($post->ID)); ?>>
-            <?php _e('Featured FAQ', 'faqzin'); ?>
+            <?php esc_html_e('Featured FAQ', 'faqzin'); ?>
         </label>
-        <p class="description"><?php _e('Highlight this FAQ, for example in a home page FAQ block.', 'faqzin'); ?></p>
+        <p class="description"><?php esc_html_e('Highlight this FAQ, for example in a home page FAQ block.', 'faqzin'); ?></p>
         <?php
     }
 
@@ -101,9 +101,9 @@ class FAQzin_Fields {
         wp_nonce_field('faqzin_category_order', 'faqzin_order_nonce');
         ?>
         <div class="form-field">
-            <label for="faqzin-order"><?php _e('Order', 'faqzin'); ?></label>
+            <label for="faqzin-order"><?php esc_html_e('Order', 'faqzin'); ?></label>
             <input type="number" name="faqzin_order" id="faqzin-order" min="0" step="1">
-            <p><?php _e('Position of this category in FAQ lists, lowest first. Categories without an order go last.', 'faqzin'); ?></p>
+            <p><?php esc_html_e('Position of this category in FAQ lists, lowest first. Categories without an order go last.', 'faqzin'); ?></p>
         </div>
         <?php
     }
@@ -112,11 +112,11 @@ class FAQzin_Fields {
         $order = self::category_order($term->term_id);
         ?>
         <tr class="form-field">
-            <th scope="row"><label for="faqzin-order"><?php _e('Order', 'faqzin'); ?></label></th>
+            <th scope="row"><label for="faqzin-order"><?php esc_html_e('Order', 'faqzin'); ?></label></th>
             <td>
                 <?php wp_nonce_field('faqzin_category_order', 'faqzin_order_nonce'); ?>
                 <input type="number" name="faqzin_order" id="faqzin-order" min="0" step="1" value="<?php echo null === $order ? '' : esc_attr($order); ?>">
-                <p class="description"><?php _e('Position of this category in FAQ lists, lowest first. Categories without an order go last.', 'faqzin'); ?></p>
+                <p class="description"><?php esc_html_e('Position of this category in FAQ lists, lowest first. Categories without an order go last.', 'faqzin'); ?></p>
             </td>
         </tr>
         <?php

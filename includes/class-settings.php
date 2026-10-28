@@ -69,10 +69,10 @@ class FAQzin_Settings {
         
         ?>
         <div class="wrap">
-            <h1><?php _e('FAQzin Settings', 'faqzin'); ?></h1>
+            <h1><?php esc_html_e('FAQzin Settings', 'faqzin'); ?></h1>
             
             <div style="background: #fff; padding: 20px; margin-top: 20px; border-left: 4px solid #007bff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h2><?php _e('Quick Guide', 'faqzin'); ?></h2>
+                <h2><?php esc_html_e('Quick Guide', 'faqzin'); ?></h2>
                 <p><strong>Shortcode:</strong> <code>[faqzin]</code></p>
                 <p><strong>Parameters:</strong></p>
                 <ul style="list-style: disc; margin-left: 20px;">
@@ -90,17 +90,17 @@ class FAQzin_Settings {
                 
                 <table class="form-table">
                     <tr valign="top">
-                        <th scope="row"><?php _e('Headless mode', 'faqzin'); ?></th>
+                        <th scope="row"><?php esc_html_e('Headless mode', 'faqzin'); ?></th>
                         <td>
                             <label>
                                 <input type="checkbox" name="faqzin_headless" value="1" <?php checked(faqzin_is_headless()); ?>>
-                                <?php _e('Another site shows the FAQs (over WPGraphQL)', 'faqzin'); ?>
+                                <?php esc_html_e('Another site shows the FAQs (over WPGraphQL)', 'faqzin'); ?>
                             </label>
-                            <p class="description"><?php _e('WordPress then publishes no FAQ pages, category archives or FAQ schema; the shortcode still works.', 'faqzin'); ?></p>
+                            <p class="description"><?php esc_html_e('WordPress then publishes no FAQ pages, category archives or FAQ schema; the shortcode still works.', 'faqzin'); ?></p>
                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row"><?php _e('Custom CSS', 'faqzin'); ?></th>
+                        <th scope="row"><?php esc_html_e('Custom CSS', 'faqzin'); ?></th>
                         <td>
                             <textarea 
                                 name="faqzin_custom_css" 
@@ -109,7 +109,7 @@ class FAQzin_Settings {
                                 class="large-text code"
                                 placeholder="/* Add your custom CSS here */"
                             ><?php echo esc_textarea(get_option('faqzin_custom_css')); ?></textarea>
-                            <p class="description"><?php _e('Add custom CSS to style your FAQs. This will be loaded inline.', 'faqzin'); ?></p>
+                            <p class="description"><?php esc_html_e('Add custom CSS to style your FAQs. This will be loaded inline.', 'faqzin'); ?></p>
                         </td>
                     </tr>
                 </table>

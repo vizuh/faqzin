@@ -123,6 +123,7 @@ class FAQzin_CLI {
      */
     private function find_faq($slug) {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- one-off CLI lookup that must see drafts; no cache wanted.
         return (int) $wpdb->get_var($wpdb->prepare(
             "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'faq' AND post_name = %s AND post_status NOT IN ('trash', 'auto-draft') LIMIT 1",
             $slug

@@ -85,7 +85,7 @@ class FAQzin_Shortcode {
                     $post_id = get_the_ID();
                     $question = get_the_title();
                     $answer_raw = get_post_field('post_content', $post_id);
-                    $answer = apply_filters('the_content', $answer_raw);
+                    $answer = apply_filters('the_content', $answer_raw); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core filter.
                     
                     // Add to schema array
                     $faqs[] = array(
@@ -188,7 +188,7 @@ class FAQzin_Shortcode {
                 <span class="faqzin-icon">+</span>
             </summary>
             <div class="faqzin-answer" aria-hidden="true">
-                <?php echo wpautop(wp_kses_post($answer)); ?>
+                <?php echo wp_kses_post(wpautop($answer)); ?>
             </div>
         </details>
         <?php
