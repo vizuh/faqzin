@@ -2,8 +2,8 @@
 Contributors: pauloreducino, hfdutra, atroci
 Tags: faq, accordion, schema, elementor, divi
 Requires at least: 5.8
-Tested up to: 6.4
-Stable tag: 2.0.0
+Tested up to: 7.1
+Stable tag: 2.1.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -21,6 +21,8 @@ FAQzin is the ultimate FAQ solution for WordPress. It combines a professional de
 *   **Premium Design:** Beautiful, responsive styling with Q/A badges, smooth animations, and clean typography.
 *   **Page Builder Ready:** Fully compatible with Gutenberg, Elementor, Divi, and others.
 *   **Developer Friendly:** Clean code, hooks, and filters.
+*   **Headless Ready:** With WPGraphQL, FAQs (`faqs`, with `answerText` and `featured`) and categories (`faqCategories`, with `order`) are in the GraphQL schema. Headless mode turns off FAQ pages, archives and schema on WordPress.
+*   **WP-CLI Import:** `wp faqzin import faqs.json` creates categories and FAQs from a JSON file.
 
 == Installation ==
 
@@ -42,6 +44,10 @@ Simply add the `[faqzin]` shortcode to any page or post. You can also filter by 
 
 Yes! You can use the Shortcode widget in Elementor to display your FAQs.
 
+= Can another site (headless) show the FAQs? =
+
+Yes. Install WPGraphQL and tick **FAQs > Settings > Headless mode**. The other site reads `faqs` and `faqCategories` over GraphQL; WordPress no longer publishes FAQ pages of its own.
+
 == Screenshots ==
 
 1.  FAQ List with Premium Design
@@ -49,6 +55,12 @@ Yes! You can use the Shortcode widget in Elementor to display your FAQs.
 3.  Settings Page
 
 == Changelog ==
+
+= 2.1.0 =
+*   New: WPGraphQL support: `faqs` and `faqCategories`, with `answerText` (plain-text answer), `featured` and category `order`.
+*   New: Headless mode (Settings): no FAQ pages, category archives or single-FAQ schema on WordPress.
+*   New: Featured box on each FAQ and an Order field on each FAQ category.
+*   New: `wp faqzin import <file.json> [--overwrite]`.
 
 = 2.0.0 =
 *   Major release: Rebranding to FAQzin.

@@ -2,8 +2,8 @@
 /**
  * Plugin Name: FAQzin
  * Plugin URI: https://vizuh.com
- * Description: Professional FAQ Manager with Schema, HTML5 Accordion, Divi & Elementor Ready
- * Version: 2.0.0
+ * Description: Professional FAQ Manager with Schema, HTML5 Accordion, Divi & Elementor Ready, and a headless mode for WPGraphQL sites
+ * Version: 2.1.0
  * Author: Vizuh
  * Author URI: https://vizuh.com
  * License: GPLv2 or later
@@ -16,9 +16,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('FAQZIN_VERSION', '2.0.0');
+define('FAQZIN_VERSION', '2.1.0');
 define('FAQZIN_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FAQZIN_PLUGIN_URL', plugin_dir_url(__FILE__));
+
+/**
+ * Headless mode (FAQs → Settings): FAQs are edited here and shown by another site that reads
+ * them over WPGraphQL, so WordPress publishes no FAQ pages, archives or schema of its own.
+ */
+function faqzin_is_headless() {
+    return (bool) apply_filters('faqzin_headless', (bool) get_option('faqzin_headless', false));
+}
 
 class FAQzin_Manager {
     private static $instance = null;
@@ -37,8 +45,13 @@ class FAQzin_Manager {
     
     private function includes() {
         require_once FAQZIN_PLUGIN_DIR . 'includes/class-cpt.php';
+        require_once FAQZIN_PLUGIN_DIR . 'includes/class-fields.php';
+        require_once FAQZIN_PLUGIN_DIR . 'includes/class-graphql.php';
         require_once FAQZIN_PLUGIN_DIR . 'includes/class-shortcode.php';
         require_once FAQZIN_PLUGIN_DIR . 'includes/class-settings.php';
+        if (defined('WP_CLI') && WP_CLI) {
+            require_once FAQZIN_PLUGIN_DIR . 'includes/class-cli.php';
+        }
     }
     
     private function init_hooks() {

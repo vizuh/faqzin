@@ -12,6 +12,9 @@ class FAQzin_Settings {
     public function __construct() {
         add_action('admin_menu', array($this, 'add_settings_page'));
         add_action('admin_init', array($this, 'register_settings'));
+        // The FAQ URLs come and go with headless mode: rebuild the rewrite rules on the next load.
+        add_action('update_option_faqzin_headless', array($this, 'reset_rewrite_rules'));
+        add_action('add_option_faqzin_headless', array($this, 'reset_rewrite_rules'));
     }
     
     /**
@@ -41,6 +44,19 @@ class FAQzin_Settings {
                 'default'           => '',
             )
         );
+        register_setting(
+            'faqzin_settings_group',
+            'faqzin_headless',
+            array(
+                'type'              => 'boolean',
+                'sanitize_callback' => 'rest_sanitize_boolean',
+                'default'           => false,
+            )
+        );
+    }
+    
+    public function reset_rewrite_rules() {
+        delete_option('rewrite_rules');
     }
     
     /**
@@ -73,6 +89,16 @@ class FAQzin_Settings {
                 ?>
                 
                 <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row"><?php _e('Headless mode', 'faqzin'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="faqzin_headless" value="1" <?php checked(faqzin_is_headless()); ?>>
+                                <?php _e('Another site shows the FAQs (over WPGraphQL)', 'faqzin'); ?>
+                            </label>
+                            <p class="description"><?php _e('WordPress then publishes no FAQ pages, category archives or FAQ schema; the shortcode still works.', 'faqzin'); ?></p>
+                        </td>
+                    </tr>
                     <tr valign="top">
                         <th scope="row"><?php _e('Custom CSS', 'faqzin'); ?></th>
                         <td>
